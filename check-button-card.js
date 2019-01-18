@@ -5,14 +5,13 @@ class CheckButtonCard extends HTMLElement {
   }
   setConfig(config) {
     const root = this.shadowRoot;
-    if (root.lastChild) root.removeChild(root.lastChild);
 
+    if (root.lastChild) root.removeChild(root.lastChild);
     if (!config.height) config.height = "40px";
     if (!config.rounding) config.rounding = "3px";
     if (!config.width) config.width = "70%";    
     
     // Create card elements.
-
     const card = document.createElement('ha-card');
     const background = document.createElement('div');
     background.id = "background";
@@ -22,6 +21,9 @@ class CheckButtonCard extends HTMLElement {
     undo.id = "undo";
     undo.style.setProperty('visibility', 'hidden');
     undo.textContent = "undo";
+    const buttonBlocker = document.createElement('div');
+    buttonBlocker.id = "buttonBlocker";
+    buttonBlocker.style.setProperty('visibility', 'hidden');
     const title = document.createElement('div');
     title.id = "title";
     title.textContent = config.title;
@@ -32,42 +34,62 @@ class CheckButtonCard extends HTMLElement {
       ha-card {
         text-align: center;
         background-color: var(--paper-card-background-color);
-        padding: 5px;
+        padding: 2px;
+        padding-right: 4px;
         height: ${config.height};
         position: relative;
       }
       #button {
         height: 40px;
-        border: none;
         line-height: 40px;
+        color: #FFF;
+        font-weight: bold;
         text-shadow: 1px 1px #000000;
         border-radius: 3px;
         width: 70%;
         float: right;
+        --background-color: #000;
+        background-color: var(--background-color);
       }
       #button:hover {
-        background-color: hsl(120, 50%, 65%);
+        --hover-background-color: #000;
+        background-color: var(--hover-background-color);
         cursor: pointer;
       }
       #button:active {
-        background-color: hsl(120, 50%, 40%);
+        --active-background-color: #000;
+        background-color: var(--active-background-color);
+      }
+      #buttonBlocker {
+        position: absolute;
+        height: ${config.height};
+        line-height: ${config.height};
+        width: 100%;
+        background-color: hsla(220, 50%, 50%, 0);
+        right: 0px;
+        border-radius: 3px;
+        text-shadow: 1px 1px #000000;
+        color: #FFF;
+        font-size: 12px;
       }
       #undo {
         position: absolute;
         height: ${config.height};
         line-height: ${config.height};
         width: 80px;
-        background-color: hsla(0, 0%, 50%, 50%);
-        right: 5px;
+        background-color: hsl(220, 50%, 50%);
+        right: 0px;
         border-radius: 3px;
         text-shadow: 1px 1px #000000;
+        color: #FFF;
         font-size: 12px;
+        margin-right: 4px;
       }
       #undo:hover {
-        background-color: hsl(0, 0%, 50%);
+        background-color: hsl(220, 50%, 60%);
       }
       #undo:active {
-        background-color: hsl(0, 0%, 40%);
+        background-color: hsl(220, 50%, 40%);
       }
       #title {
         display: table-cell;
@@ -92,22 +114,18 @@ class CheckButtonCard extends HTMLElement {
     titleBar.appendChild(title);
     card.appendChild(titleBar);
     card.appendChild(button);
+    card.appendChild(buttonBlocker);
     card.appendChild(undo);
     card.appendChild(style);
-    button.addEventListener('mouseup', event => {
-      this._action(config, this._counter);
-    });
-    undo.addEventListener('mouseup', event => {
-      this._undoAction();
-    });
+    button.addEventListener('mouseup', event => { this._action(config, this._counter); });
+    undo.addEventListener('mouseup', event => { this._undoAction(); });
     root.appendChild(card);
     this._config = config;
   }
   
-  // Create card
+  // Create card.
   set hass(hass) {
     const config = this._config;
-    const root = this.shadowRoot;
     let entityState;
     if(hass.states[config.entity] == undefined){
       entityState = "undefined"
@@ -118,7 +136,6 @@ class CheckButtonCard extends HTMLElement {
     this._hass = hass;
     var counter = this._startTimer();
     clearInterval(this._counter);
-    this._undoEntityState = this._entityState;
     this._counter = counter;
     this._entityState = entityState;
   }
@@ -129,28 +146,45 @@ class CheckButtonCard extends HTMLElement {
     const hass = this._hass;
     let entityState;
     if(hass.states[config.entity] == undefined){
-      entityState = "undefined"
+      entityState = "undefined";
     }
     else{
       entityState = hass.states[config.entity].state;
     }
+
     function convertToSeconds(time){
       let output;
       const timeFix = time+"";
       let timeArray = timeFix.split(" ");
-      //alert(timeArray);
       if(timeArray.length <= 1){
         output = time;
       }
       else{
-        if(timeArray[1] == "days"){
-          output = timeArray[0]*86400;
-        }
-        if(timeArray[1] == "hours"){
-          output = timeArray[0]*3600;
-        }
-        if(timeArray[1] == "minutes"){
-          output = timeArray[0]*60;
+        switch(timeArray[1]){
+          case "year":
+          case "years":
+            output = timeArray[0]*29030400;
+            break;
+          case "month":
+          case "months":
+            output = timeArray[0]*2419200
+            break;
+          case "week":
+          case "weeks":
+            output = timeArray[0]*604800;
+            break;
+          case "day":
+          case "days":
+            output = timeArray[0]*86400;
+            break;
+          case "hour":
+          case "hours":
+            output = timeArray[0]*3600;
+            break; 
+          case "minute":   
+          case "minutes":
+            output = timeArray[0]*60;
+            break;    
         }
       }
       return output;
@@ -166,45 +200,18 @@ class CheckButtonCard extends HTMLElement {
           hue = section.hue;
         }
       });
-      if(!hue){
-        hue = sections[arrayLength - 1].hue;
-      }
+      if(!hue) hue = sections[arrayLength - 1].hue;
       return hue;
     }
 
-    function timeIncrease(){
-      let elapsedTime = ((Date.now()/1000) - Number(entityState));
-      let displayTime;
-      let displayText;
-      let seconds = elapsedTime;
-      seconds = Math.trunc(seconds);
-      let minutes = seconds/60;
-      minutes = Math.trunc(minutes);
-      let hours = minutes/60;
-      hours = Math.trunc(hours)
-      let days = hours/24;
-      days = Math.trunc(days);
+    const convertTime = this._convertTime(entityState);
 
-      if(days > 0){
-        displayTime = days;
-        displayText = "days";
-      }
-      else if(hours > 0){
-        displayTime = hours;
-        if(hours <= 1) displayText = "hour";
-        if(hours > 1) displayText = "hours";     
-      }
-      else if(minutes > 0){
-        displayTime = minutes;
-        if(minutes <= 1) displayText = "minute";
-        if(minutes > 1) displayText = "minutes";
-      }
-      else {
-        displayTime = "less than 1";
-        displayText = "minute";
-      }
-
+    // Update displayed time
+    function timeIncrease(){      
+      let displayTime = convertTime.displayTime;
+      let displayText = convertTime.displayText;
       let hue;
+
       if(!config.severity) {
         hue = 220;
         if(config.hue){
@@ -212,33 +219,23 @@ class CheckButtonCard extends HTMLElement {
         }
       }
       else{
-        hue = computeSeverity(seconds, config.severity);
+        hue = computeSeverity(convertTime.seconds, config.severity);
       }      
       root.getElementById("button").textContent = displayTime + " " + displayText + " ago" ;
-      root.getElementById("button").style.setProperty('background-color', "hsl("+hue+", 50%, 50%");
+      root.getElementById("button").style.setProperty('--background-color', "hsl("+hue+", 50%, 50%");
+      root.getElementById("button").style.setProperty('--hover-background-color', "hsl("+hue+", 50%, 60%");
+      root.getElementById("button").style.setProperty('--active-background-color', "hsl("+hue+", 50%, 40%");
     }
     timeIncrease();
-    var counter = setInterval(timeIncrease, 1000);
+    var counter = setInterval(timeIncrease(), 1000);
     return counter;
   }
 
-  // Returns hue value based on severity array
-  _computeSeverity(stateValue, sections) {
-    let numberValue = Number(stateValue);
-    let hue;
-    sections.forEach(section => {
-      if (numberValue <= section.value && !hue) {
-        hue = section.hue;
-      }
-    });
-    return hue;
-  }
-  
-  _calculateTime(entityState){
-    let elapsedTime = (Date.now() - Number(entityState));
+  _convertTime(entityState){
+    let elapsedTime = (Date.now()/1000 - Number(entityState));
     let displayTime;
     let displayText;
-    let seconds = elapsedTime/1000;
+    let seconds = elapsedTime;
     seconds = Math.trunc(seconds);
     let minutes = seconds/60;
     minutes = Math.trunc(minutes);
@@ -246,44 +243,71 @@ class CheckButtonCard extends HTMLElement {
     hours = Math.trunc(hours)
     let days = hours/24;
     days = Math.trunc(days);
-    displayTime = seconds + "," + minutes;
-    displayText = "";
-    if(days > 0){
+    let weeks = seconds/604800;
+    weeks = Math.trunc(weeks);
+    let months = seconds/2678400;
+    months = Math.trunc(months);
+    let years = seconds/31536000;
+    years = Math.trunc(years);
+
+    if(years > 0){
+      displayTime = years;
+      if(years == 1) displayText = "year"
+      else displayText = "years";
+    }
+    else if(months > 0){
+      displayTime = months;
+      if(months == 1) displayText = "month"
+      else displayText = "months";
+    }
+    else if(weeks > 0){
+      displayTime = weeks;
+      if(weeks == 1) displayText = "week"
+      else displayText = "weeks";
+    }
+    else if(days > 0){
       displayTime = days;
       displayText = "days";
+      if(days == 1) displayText = "day";
+      else displayText = "days";
     }
     else if(hours > 0){
       displayTime = hours;
-      if(hours <= 1) displayText = "hour";
-      if(hours > 1) displayText = "hours";       
+      if(hours == 1) displayText = "hour";
+      else displayText = "hours";     
     }
     else if(minutes > 0){
       displayTime = minutes;
-      if(minutes <= 1) displayText = "minute";
-      if(minutes > 1) displayText = "minutes";
+      if(minutes == 1) displayText = "minute";
+      else displayText = "minutes";
     }
     else {
       displayTime = "less than 1";
       displayText = "minute";
     }
-    return [displayTime, displayText];
+    return {"displayTime":displayTime, "displayText":displayText, "seconds":seconds};
   }
 
   _action() {
     const config = this._config;
     const root = this.shadowRoot;
-    function enableButton(){
-      root.getElementById("undo").style.removeProperty('visibility');
-    }
-    setTimeout(enableButton, 3000);
-    this._startUndo();
-    this._hass.callService("mqtt", "publish", {"topic" : config.topic, "payload" : (Math.trunc(Date.now()/1000)), "retain": true});
+    root.getElementById("undo").style.removeProperty('visibility');
+    root.getElementById("buttonBlocker").style.removeProperty('visibility');
+    this._undoEntityState = this._entityState;
+    this._currentTimestamp = (Math.trunc(Date.now()/1000))
+    this._clearUndo = this._showUndo();
+    this._hass.callService("mqtt", "publish", {"topic" : config.topic, "payload" : '{"timestamp":'+this._currentTimestamp+',"timeout_high":"'+config.timeout_high+'","timeout_low":"'+config.timeout_low+'","visible":true}', "retain": true});
   }
 
-  _startUndo(){
+  _showUndo(){
     const root = this.shadowRoot;
+    const config = this._config;
+    const mqttPublish = this._hass;
+    const currentTimestamp = this._currentTimestamp
     function clearUndo(){
       root.getElementById("undo").style.setProperty('visibility', 'hidden');
+      root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
+      mqttPublish.callService("mqtt", "publish", {"topic" : config.topic, "payload" : '{"timestamp":'+currentTimestamp+',"timeout_high":"'+config.timeout_high+'","timeout_low":"'+config.timeout_low+'","visible":false}', "retain": true});
     }
     var clearUndoReturn = setTimeout(clearUndo, 30000);
     return clearUndoReturn;
@@ -293,7 +317,9 @@ class CheckButtonCard extends HTMLElement {
     const config = this._config; 
     const root = this.shadowRoot;
     root.getElementById("undo").style.setProperty('visibility', 'hidden');
-    this._hass.callService("mqtt", "publish", {"topic" : config.topic, "payload" : this._undoEntityState, "retain": true});
+    root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
+    this._hass.callService("mqtt", "publish", {"topic" : config.topic, "payload" : '{"timestamp":'+this._undoEntityState+',"timeout_high":"'+config.timeout_high+'","timeout_low":"'+config.timeout_low+'","visible":true}', "retain": true});
+    clearTimeout(this._clearUndo);
   }
 
   getCardSize() {
