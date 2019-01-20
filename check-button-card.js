@@ -9,9 +9,21 @@ class CheckButtonCard extends HTMLElement {
     // Default Config Settings
     if(root.lastChild) root.removeChild(root.lastChild);
     if(!config.height) config.height = "40px";
+    if(!config.saturation) config.saturation = "50%"
     if(!config.width) config.width = "70%"; 
     if(!config.mode) config.mode = "homeassistant";
-    if(!config.undo_timeout) config.undo_timeout = 10;
+    if(!config.discovery_prefix) config.discovery_prefix = "homeassistant";
+    if(!config.undo_timeout) config.undo_timeout = 15;
+    if(!config.visibility_timeout) config.visibility_timeout = "none";
+    const sensorNameArray = config.entity.split(".");
+    config.topic = sensorNameArray[1];
+
+    if(config.bar_style){
+      var buttonStyle = this._customStyle(config.button_style)
+    }
+    if(config.title_style){
+      var titleStyle = this._customStyle(config.button_style)
+    }
     
     // Create card elements
     const card = document.createElement('ha-card');
@@ -56,8 +68,8 @@ class CheckButtonCard extends HTMLElement {
     daysInput.type = "number";
     daysInput.id = "daysInput";
     daysInput.placeholder = "dd";
-    const form = document.createElement("div");
-    form.id = "form";
+    const inputForm = document.createElement("div");
+    inputForm.id = "inputForm";
     const submitButton = document.createElement("div");
     submitButton.id = "submitButton";
     submitButton.textContent = "✔";
@@ -67,8 +79,18 @@ class CheckButtonCard extends HTMLElement {
 
     // Config Bar
     const configBar = document.createElement('div');
-    configBar.id = "inputBar";
-    configBar.style.setProperty('visibility', 'hidden');
+    configBar.id = "configBar";
+    if(config.remove !== true) configBar.style.setProperty('visibility', 'hidden');
+    const configInput = document.createElement("div");
+    configInput.textContent = "Entity doesn't exist. Create?";
+    //configInput.type = "text";
+    configInput.id = "configInput";
+    //configInput.placeholder = "entity name";
+    const configForm = document.createElement("div");
+    configForm.id = "configForm";
+    const submitConfigButton = document.createElement("div");
+    submitConfigButton.id = "submitConfigButton";
+    submitConfigButton.textContent = "✔";
 
     // Style
     const style = document.createElement('style');
@@ -95,6 +117,7 @@ class CheckButtonCard extends HTMLElement {
         --background-color: #000;
         right: 0;
         background-color: var(--background-color);
+        `+buttonStyle+`
       }
       #button:hover {
         cursor: pointer;
@@ -109,20 +132,22 @@ class CheckButtonCard extends HTMLElement {
         height: ${config.height};
         width: 1000px;
         vertical-align: middle;
+        `+buttonStyle+`
       }
       #buttonBlocker {
         position: absolute;
         height: ${config.height};
         line-height: ${config.height};
-        width: 100%;
-        background-color: hsla(220, 50%, 50%, 0);
+        width: ${config.width};
+        right: 0;
+        background-color: hsla(220, ${config.saturation}, 50%, 0);
       }
       #undo {
         position: absolute;
         height: ${config.height};
         line-height: ${config.height};
         width: 80px;
-        background-color: hsl(220, 50%, 50%);
+        background-color: hsl(220, 40%, 50%);
         right: 0px;
         border-radius: 3px;
         text-shadow: 1px 1px #000000;
@@ -142,11 +167,13 @@ class CheckButtonCard extends HTMLElement {
         font-size: 14px;
         vertical-align: middle;
         color: var(--primary-text-color);
+        `+titleStyle+`
       }
       #titleBar {
         position: absolute;
         height: ${config.height};
         width: 100%;
+        `+titleStyle+`
       }
       #inputBar, #configBar {
         position: absolute;
@@ -158,7 +185,8 @@ class CheckButtonCard extends HTMLElement {
         border-radius: 3px;
         width: ${config.width};
         right: 0;
-        background-color: hsl(220, 50%, 50%);
+        --background-color: hsl(220, 50%, 50%);
+        background-color: var(--background-color);
       }
       #secondsInput, #minutesInput, #hoursInput, #daysInput, #monthsInput, #yearsInput {
         height: 25px;
@@ -168,7 +196,13 @@ class CheckButtonCard extends HTMLElement {
         border-color: #000;
         border: 2px solid gray;
       }
-      #submitButton {
+      #configInput {
+        right: 0px;
+        text-shadow: 1px 1px #000000;
+        color: #FFF;
+        font-weight: bold;
+      }
+      #submitButton, #submitConfigButton {
         position: relative;
         float: left;
         width: 50px;
@@ -176,8 +210,11 @@ class CheckButtonCard extends HTMLElement {
         font-size: 22px;
         font-weight: bold;
       }
-      #submitButton:hover {
+      #submitButton:hover, #submitConfigButton:hover {
         font-size: 30px;
+      }
+      #submitConfigButton {
+        float: right;
       }
       #cancelButton {
         position: relative;
@@ -190,10 +227,14 @@ class CheckButtonCard extends HTMLElement {
       #cancelButton:hover {
         font-size: 30px;
       }
-      #form {
+      #inputForm {
         position: absolute;
         left: 50%;
         margin-left: -57px;
+      }
+      #configForm{
+        position: absolute;
+        width: 100%;
       }
       input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { 
         -webkit-appearance: none; 
@@ -203,45 +244,69 @@ class CheckButtonCard extends HTMLElement {
 
     // Build card.
     titleBar.appendChild(title);
-    background.appendChild(titleBar);
+
     button.appendChild(buttonText);
+
+    inputForm.appendChild(daysInput);
+    inputForm.appendChild(hoursInput);
+    inputForm.appendChild(minutesInput);
+    inputBar.appendChild(cancelButton);
+    inputBar.appendChild(inputForm);
+    inputBar.appendChild(submitButton);
+
+    configForm.appendChild(configInput);
+    configBar.appendChild(configForm);
+    configBar.appendChild(submitConfigButton);
+
+    background.appendChild(titleBar);
     background.appendChild(button);
     background.appendChild(buttonBlocker);
     background.appendChild(undo);
-    form.appendChild(daysInput);
-    form.appendChild(hoursInput);
-    form.appendChild(minutesInput);
-    inputBar.appendChild(cancelButton);
-    inputBar.appendChild(form);
-    inputBar.appendChild(submitButton);
     background.appendChild(inputBar);
     background.appendChild(configBar);
     background.appendChild(style);
+
     card.appendChild(background);
-    button.addEventListener('mouseup', event => { this._action(config, this._counter); });
+
+    // Events
+    button.addEventListener('mouseup', event => { this._action(); });
     undo.addEventListener('mouseup', event => { this._undoAction(); });
     titleBar.addEventListener('mouseup', event => { this._showInputAction(); });
     submitButton.addEventListener('mouseup', event => { this._setInputAction(); });
     cancelButton.addEventListener('mouseup', event => { this._hideInputAction(); });
+    submitConfigButton.addEventListener('mouseup', event => { this._setConfigAction(); });
+
+    // Add to root
     root.appendChild(card);
+
     this._config = config;
   }
   
   // Create card.
   set hass(hass) {
     const config = this._config;
+    this._hass = hass;
     let entityState;
-    if(hass.states[config.entity] == undefined){
-      entityState = "undefined"
+    if(hass.states[config.entity] == undefined || config.remove == true){
+      this._showConfigBar();
     }
     else{
       entityState = hass.states[config.entity].state;
     }
-    this._hass = hass;
+
     var counter = this._startTimer();
     clearInterval(this._counter);
     this._counter = counter;
     this._entityState = entityState;
+  }
+
+  _customStyle(style){
+    let styleString = "";
+
+    Object.keys(style).forEach(section => {
+        styleString = styleString + section + ":" + style[section] + "; ";
+    });
+    return styleString;
   }
 
   _convertToSeconds(time){
@@ -314,9 +379,9 @@ class CheckButtonCard extends HTMLElement {
       hue = this._computeSeverity(convertTime.seconds, config.severity);
     }      
     root.getElementById("buttonText").textContent = displayTime + " " + displayText + " ago" ;
-    root.getElementById("button").style.setProperty('--background-color', "hsl("+hue+", 50%, 50%");
-    root.getElementById("button").style.setProperty('--hover-background-color', "hsl("+hue+", 50%, 60%");
-    root.getElementById("button").style.setProperty('--active-background-color', "hsl("+hue+", 50%, 40%");
+    root.getElementById("button").style.setProperty('--background-color', "hsl("+hue+", "+config.saturation+", 50%");
+    root.getElementById("button").style.setProperty('--hover-background-color', "hsl("+hue+", "+config.saturation+", 60%");
+    root.getElementById("button").style.setProperty('--active-background-color', "hsl("+hue+", "+config.saturation+", 40%");
   }
 
   _computeSeverity(stateValue, sections) {
@@ -406,7 +471,7 @@ class CheckButtonCard extends HTMLElement {
     else{
       payload = this._currentTimestamp;
     }
-    this._hass.callService("mqtt", "publish", {"topic" : config.topic, "payload" : payload, "retain": true});
+    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
   }
 
   _showUndo(){
@@ -435,7 +500,9 @@ class CheckButtonCard extends HTMLElement {
     function clearUndo(){
       root.getElementById("undo").style.setProperty('visibility', 'hidden');
       root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
-      mqttPublish.callService("mqtt", "publish", {"topic" : config.topic, "payload" : payload, "retain": true});
+      if(config.visibility_timeout != "none"){
+        mqttPublish.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
+      }
     }
 
     var clearUndoReturn = setTimeout(clearUndo, config.undo_timeout*1000);
@@ -456,7 +523,7 @@ class CheckButtonCard extends HTMLElement {
       payload = this._currentTimestamp;
     }
 
-    this._hass.callService("mqtt", "publish", {"topic" : config.topic, "payload" : payload, "retain": true});
+    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
     clearTimeout(this._clearUndo);
   }
 
@@ -477,7 +544,7 @@ class CheckButtonCard extends HTMLElement {
     else{
       payload = this._currentTimestamp;
     }
-    this._hass.callService("mqtt", "publish", {"topic" : config.topic, "payload" : payload, "retain": true});
+    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
     root.getElementById("undo").style.removeProperty('visibility');
     root.getElementById("buttonBlocker").style.removeProperty('visibility');
     this._currentTimestamp = timestamp;
@@ -496,11 +563,36 @@ class CheckButtonCard extends HTMLElement {
   }
 
   _showConfigBar(){
-    
+    const root = this.shadowRoot;
+    const config = this._config;
+    root.getElementById("configBar").style.removeProperty('visibility');
+    if(config.remove == true){
+      if(this._hass.states[config.entity] != undefined){
+        root.getElementById("configInput").textContent = "Remove Entity?";
+      }
+      else{
+        root.getElementById("submitConfigButton").style.setProperty('visibility', 'hidden');
+        root.getElementById("configInput").textContent = "Entity removed. Set remove to false.";
+      }
+      root.getElementById("configBar").style.setProperty('--background-color', '#FF0000');
+    }
   }
 
   _setConfigAction(){
-    const message = '{"value_template": "{{ value_json.timestamp }}","json_attributes": ["visible","visibility_timeout"],"state_topic": "homeassistant/animals_'+msg.animal+'_'+msg.topic+'","name": "animals_'+msg.animal+'_'+msg.topic+'","unique_id": "animals_'+msg.animal+'_'+msg.topic+'_homeassistant"}'
+    const root = this.shadowRoot;
+    const config = this._config;
+    const sensorNameArray = config.entity.split(".");
+    const sensorName = sensorNameArray[1];
+    root.getElementById("configBar").style.setProperty('visibility', 'hidden');
+    const message = '{"value_template": "{{ value_json.timestamp }}","json_attributes": ["visible","visibility_timeout"],"state_topic": "'+config.discovery_prefix+'/'+config.topic+'","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
+    if(config.remove == true){
+      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : "", "retain": true});
+      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+sensorName, "payload" : "", "retain": true});
+    }
+    else{
+      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : message, "retain": true});
+      this._action();
+    }
   }
 
   getCardSize() {
