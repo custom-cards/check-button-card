@@ -8,7 +8,7 @@ Check Button Card is a button that tracks when it is last pressed, for the Home 
 ### Features
 - Shows how long ago you've pressed the button.
 - Automatic sensor configuration using Home Assistant MQTT discovery.
-- Enter custom time by pressing the button title.
+- Hold button to set custom time.
 - Undo unwanted changes.
 - Publishes visibility attribute for use with conditional cards.
 - Possible to change button state by publishing to the topic with automations (Node-Red, etc).
@@ -27,6 +27,7 @@ A visibility timeout can be used in combination with a conditional card to show 
 | type | string | **Required** | `custom:check-button-card`
 | entity | string | **Required** | Sensor entity used to create and publish to.
 | title | string | none | Title displayed next to the bar.
+| title_position | string | left | Sets the position of the title `left`,`inside`.
 | visibility_timeout | string | none | Attribute added to entity for use in automation.
 | undo_timeout | number | 15 | Time until undo button times out in seconds.
 | hue | number | 220 | Changed the color hue of the bar `0`-`360`.
@@ -34,6 +35,7 @@ A visibility timeout can be used in combination with a conditional card to show 
 | height | string | 40px | Scales the height of the bar.
 | width | string | 70% | Scales the width of the bar.
 | severity | object | none | A list of severity values. Can use `* minutes`,`* hours`,`* days`, `* months`,`* years`
+| card_style | object | none | A list of CSS styles applied to the card background.
 | button_style | object | none | A list of CSS styles applied to the bar.
 | title_style | object | none | A list of CCS styles applied to the title.
 | remove | boolean | false | Set to `true` for removal config mode. Used to remove entity from MQTT discovery.

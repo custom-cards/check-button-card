@@ -10,7 +10,12 @@ class CheckButtonCard extends HTMLElement {
     if(root.lastChild) root.removeChild(root.lastChild);
     if(!config.height) config.height = "40px";
     if(!config.saturation) config.saturation = "50%"
-    if(!config.width) config.width = "70%"; 
+    if(config.title_position != "inside"){
+      if(!config.width) config.width = "70%"; 
+    }
+    else{
+      if(!config.width) config.width = "100%"; 
+    }
     if(!config.mode) config.mode = "homeassistant";
     if(!config.discovery_prefix) config.discovery_prefix = "homeassistant";
     if(!config.undo_timeout) config.undo_timeout = 15;
@@ -18,11 +23,14 @@ class CheckButtonCard extends HTMLElement {
     const sensorNameArray = config.entity.split(".");
     config.topic = sensorNameArray[1];
 
-    if(config.bar_style){
+    if(config.button_style){
       var buttonStyle = this._customStyle(config.button_style)
     }
     if(config.title_style){
-      var titleStyle = this._customStyle(config.button_style)
+      var titleStyle = this._customStyle(config.title_style)
+    }
+    if(config.card_style){
+      var cardStyle = this._customStyle(config.card_style)
     }
     
     // Create card elements
@@ -83,9 +91,7 @@ class CheckButtonCard extends HTMLElement {
     if(config.remove !== true) configBar.style.setProperty('visibility', 'hidden');
     const configInput = document.createElement("div");
     configInput.textContent = "Entity doesn't exist. Create?";
-    //configInput.type = "text";
     configInput.id = "configInput";
-    //configInput.placeholder = "entity name";
     const configForm = document.createElement("div");
     configForm.id = "configForm";
     const submitConfigButton = document.createElement("div");
@@ -96,22 +102,21 @@ class CheckButtonCard extends HTMLElement {
     const style = document.createElement('style');
     style.textContent = `
       ha-card {
-        text-align: center;
         background-color: var(--paper-card-background-color);
-        height: ${config.height};
-        margin-bottom: 4px;
-        position: relative;
+        padding: 4px;
+        `+cardStyle+`
       }
       #background {
         position: relative;
-        margin: 4px;
+        height: ${config.height};
       }
       #button {
         position: absolute;
         height: ${config.height};
         color: #FFF;
+        text-align: center;
         font-weight: bold;
-        text-shadow: 1px 1px #000000;
+        text-shadow: 1px 1px #000;
         border-radius: 3px;
         width: ${config.width};
         --background-color: #000;
@@ -144,13 +149,14 @@ class CheckButtonCard extends HTMLElement {
       }
       #undo {
         position: absolute;
+        text-align: center;
         height: ${config.height};
         line-height: ${config.height};
         width: 80px;
         background-color: hsl(220, 40%, 50%);
         right: 0px;
         border-radius: 3px;
-        text-shadow: 1px 1px #000000;
+        text-shadow: 1px 1px #000;
         color: #FFF;
         font-size: 12px;
         cursor: pointer;
@@ -198,11 +204,13 @@ class CheckButtonCard extends HTMLElement {
       }
       #configInput {
         right: 0px;
-        text-shadow: 1px 1px #000000;
+        text-shadow: 1px 1px #000;
         color: #FFF;
         font-weight: bold;
       }
       #submitButton, #submitConfigButton {
+        text-align: center;
+        cursor: pointer;
         position: relative;
         float: left;
         width: 50px;
@@ -217,6 +225,8 @@ class CheckButtonCard extends HTMLElement {
         float: right;
       }
       #cancelButton {
+        text-align: center;
+        cursor: pointer;
         position: relative;
         float: right;
         width: 50px;
@@ -258,20 +268,27 @@ class CheckButtonCard extends HTMLElement {
     configBar.appendChild(configForm);
     configBar.appendChild(submitConfigButton);
 
-    background.appendChild(titleBar);
+    if(config.title_position != "inside"){
+      background.appendChild(titleBar);
+    }
+
     background.appendChild(button);
-    background.appendChild(buttonBlocker);
-    background.appendChild(undo);
     background.appendChild(inputBar);
     background.appendChild(configBar);
+    background.appendChild(buttonBlocker);
+    background.appendChild(undo);
     background.appendChild(style);
 
     card.appendChild(background);
 
     // Events
-    button.addEventListener('mouseup', event => { this._action(); });
+    button.addEventListener("mousedown", event => { this._buttonHold("down"); });
+    button.addEventListener("touchstart", event => { this._buttonHold("down"); });
+    button.addEventListener('mouseup', event => { this._buttonHold("up"); this._action(); });
+    button.addEventListener('touchend', event => { this._buttonHold("up"); });
+    buttonBlocker.addEventListener('mouseup', event => { this._buttonHold("up"); });
+    buttonBlocker.addEventListener('touchend', event => { this._buttonHold("up"); });
     undo.addEventListener('mouseup', event => { this._undoAction(); });
-    titleBar.addEventListener('mouseup', event => { this._showInputAction(); });
     submitButton.addEventListener('mouseup', event => { this._setInputAction(); });
     cancelButton.addEventListener('mouseup', event => { this._hideInputAction(); });
     submitConfigButton.addEventListener('mouseup', event => { this._setConfigAction(); });
@@ -290,7 +307,10 @@ class CheckButtonCard extends HTMLElement {
     if(hass.states[config.entity] == undefined || config.remove == true){
       this._showConfigBar();
     }
-    else{
+    if(hass.states[config.entity] != undefined){
+      if(hass.states[config.entity].attributes.unit_of_measurement != "timestamp" && this._configSet != true){
+        this._showConfigBar();
+      }
       entityState = hass.states[config.entity].state;
     }
 
@@ -377,8 +397,13 @@ class CheckButtonCard extends HTMLElement {
     }
     else{
       hue = this._computeSeverity(convertTime.seconds, config.severity);
+    }
+    if(config.title_position == "inside"){
+      root.getElementById("buttonText").textContent = `${config.title} \r\n${displayTime} ${displayText} ago`;
+    }
+    else{
+      root.getElementById("buttonText").textContent = displayTime + " " + displayText + " ago" ;
     }      
-    root.getElementById("buttonText").textContent = displayTime + " " + displayText + " ago" ;
     root.getElementById("button").style.setProperty('--background-color', "hsl("+hue+", "+config.saturation+", 50%");
     root.getElementById("button").style.setProperty('--hover-background-color', "hsl("+hue+", "+config.saturation+", 60%");
     root.getElementById("button").style.setProperty('--active-background-color', "hsl("+hue+", "+config.saturation+", 40%");
@@ -466,7 +491,7 @@ class CheckButtonCard extends HTMLElement {
     let payload;
 
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+this._currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true}';
+      payload = '{"timestamp":'+this._currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp"}';
     }
     else{
       payload = this._currentTimestamp;
@@ -491,7 +516,7 @@ class CheckButtonCard extends HTMLElement {
 
     let payload;
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":'+visibility+'}';
+      payload = '{"timestamp":'+currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":'+visibility+',"unit_of_measurement":"timestamp"}';
     }
     else{
       payload = this._currentTimestamp;
@@ -517,7 +542,7 @@ class CheckButtonCard extends HTMLElement {
 
     let payload;
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+this._undoEntityState+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true}';
+      payload = '{"timestamp":'+this._undoEntityState+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp"}';
     }
     else{
       payload = this._currentTimestamp;
@@ -536,10 +561,13 @@ class CheckButtonCard extends HTMLElement {
     const totalTime = (minutes*60)+(hours*3600)+(days*86400);
     const timestamp = (Math.trunc(Date.now()/1000))-totalTime;
     root.getElementById("inputBar").style.setProperty('visibility', 'hidden');
+    root.getElementById("minutesInput").value = "";
+    root.getElementById("hoursInput").value = "";
+    root.getElementById("daysInput").value = "";
 
     let payload;
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+timestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true}';
+      payload = '{"timestamp":'+timestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp"}';
     }
     else{
       payload = this._currentTimestamp;
@@ -569,12 +597,19 @@ class CheckButtonCard extends HTMLElement {
     if(config.remove == true){
       if(this._hass.states[config.entity] != undefined){
         root.getElementById("configInput").textContent = "Remove Entity?";
-      }
+      }      
       else{
         root.getElementById("submitConfigButton").style.setProperty('visibility', 'hidden');
         root.getElementById("configInput").textContent = "Entity removed. Set remove to false.";
       }
       root.getElementById("configBar").style.setProperty('--background-color', '#FF0000');
+    }
+    if(this._hass.states[config.entity] != undefined){
+      if(this._hass.states[config.entity].attributes.unit_of_measurement != "timestamp"){
+        root.getElementById("submitConfigButton").style.setProperty('visibility', 'hidden');
+        root.getElementById("configInput").textContent = "Already exists. Incorrect entity type.";
+        root.getElementById("configBar").style.setProperty('--background-color', '#FF0000');
+      }
     }
   }
 
@@ -584,16 +619,36 @@ class CheckButtonCard extends HTMLElement {
     const sensorNameArray = config.entity.split(".");
     const sensorName = sensorNameArray[1];
     root.getElementById("configBar").style.setProperty('visibility', 'hidden');
-    const message = '{"value_template": "{{ value_json.timestamp }}","json_attributes": ["visible","visibility_timeout"],"state_topic": "'+config.discovery_prefix+'/'+config.topic+'","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
+    const discoveryConfig = '{"value_template": "{{ value_json.timestamp }}","json_attributes": ["visible","visibility_timeout","unit_of_measurement"],"state_topic": "'+config.discovery_prefix+'/'+config.topic+'","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
     if(config.remove == true){
-      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : "", "retain": true});
       this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+sensorName, "payload" : "", "retain": true});
+      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : "", "retain": true});
     }
     else{
-      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : message, "retain": true});
+      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : discoveryConfig, "retain": true});
+      this._configSet = true;
       this._action();
     }
   }
+
+  _buttonHold(state) {
+    const root = this.shadowRoot;
+
+    function showConfig(){
+      root.getElementById("inputBar").style.removeProperty('visibility');
+      root.getElementById("buttonBlocker").style.removeProperty('visibility');
+    }
+
+    if(state == "down"){
+      this._showInputTimeout = setTimeout(showConfig, 1000);
+    }
+    else if(state == "up"){
+      root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
+      clearTimeout(this._showInputTimeout);
+    }
+  }
+
+  _buttonUp(){}
 
   getCardSize() {
     return 1;
