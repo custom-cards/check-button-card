@@ -16,7 +16,7 @@ Check Button Card is a button that tracks when it is last pressed, for the Home 
 ## Installation
 Requires a working MQTT setup with discovery enabled in Home Assistant. For more information check out the Home Assistant [documentation](https://www.home-assistant.io/docs/mqtt/discovery/).
 
-The card will start in configuration mode and prompt you to create the MQTT config required for auto discovery. If the enitity doesn't exist it will be created with the entity provided in the card config. After the button is configured the sensor will show up in your Home Assistant entity list and is used by the card to track the last button press.
+The card will start in configuration mode and prompt you to create the MQTT config required for auto discovery. If the entity doesn't exist it will be created with the entity provided in the card config. After the button is configured the sensor will show up in your Home Assistant entity list and is used by the card to track the last button press.
 
 A visibility timeout can be used in combination with a conditional card to show and hide items on the front-end. This requires custom automation to achieve (I personally use Node-Red for this).
 ![](images/vis_example.gif)
