@@ -20,6 +20,18 @@ The card will start in configuration mode and prompt you to create the MQTT conf
 
 A visibility timeout can be used in combination with a conditional card to show and hide items on the front-end. This requires custom automation to achieve (I personally use Node-Red for this).
 ![](images/vis_example.gif)
+
+## MQTT
+
+It is possible to publish to the MQTT topic using automations to update the button state using physical buttons for example (instead of using the UI button).
+
+The payload should be published to the relevant sensor. If you sensor is named `sensor.test_button` the topic should be `homeassistant/test_button`. For more information check out the Home Assistant [documentation](https://www.home-assistant.io/docs/mqtt/discovery/). 
+
+### Payload Example
+``` json
+{"timestamp":"**timestamp here**","visibility_timeout":"2 hours","visible":true,"unit_of_measurement":"timestamp"}
+```
+
 ## Options
 
 | Name | Type | Default | Description
