@@ -74,3 +74,7 @@ The payload should be published to the relevant sensor. If you sensor is named `
   - value: 20 minutes
     hue: '0'
 ```
+
+## Links
+
+[Home Assistant Community Topic](https://community.home-assistant.io/t/lovelace-check-button-card/92980)
