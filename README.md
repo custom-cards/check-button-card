@@ -18,7 +18,7 @@ Requires a working MQTT setup with discovery enabled in Home Assistant. For more
 
 The card will start in configuration mode and prompt you to create the MQTT config required for auto discovery. If the entity doesn't exist it will be created with the entity provided in the card config. After the button is configured the sensor will show up in your Home Assistant entity list and is used by the card to track the last button press.
 
-A visibility timeout can be used in combination with a conditional card to show and hide items on the front-end. This requires custom automation to achieve (I personally use Node-Red for this).
+The visibility timeout can be used in combination with a conditional card to show and hide items on the front-end. This requires custom automation to achieve (I personally use Node-Red for this).
 ![](images/vis_example.gif)
 
 ## MQTT
@@ -38,17 +38,17 @@ The payload should be published to the relevant sensor. If you sensor is named `
 | ---- | ---- | ------- | -----------
 | type | string | **Required** | `custom:check-button-card`
 | entity | string | **Required** | Sensor entity used to create and publish to.
-| title | string | none | Title displayed next to the bar.
+| title | string | none | Title displayed next to the button.
 | title_position | string | left | Sets the position of the title `left`,`inside`.
 | visibility_timeout | string | none | Attribute added to entity for use in automation.
 | undo_timeout | number | 15 | Time until undo button times out in seconds.
 | hue | number | 220 | Changed the color hue of the bar `0`-`360`.
-| saturation | string | 50% | Scales saturation of the bar.
-| height | string | 40px | Scales the height of the bar.
-| width | string | 70% | Scales the width of the bar.
+| saturation | string | 50% | Scales saturation of the button.
+| height | string | 40px | Scales the height of the button.
+| width | string | 70% | Scales the width of the button.
 | severity | object | none | A list of severity values. Can use `* minutes`,`* hours`,`* days`, `* months`,`* years`
 | card_style | object | none | A list of CSS styles applied to the card background.
-| button_style | object | none | A list of CSS styles applied to the bar.
+| button_style | object | none | A list of CSS styles applied to the button.
 | title_style | object | none | A list of CCS styles applied to the title.
 | remove | boolean | false | Set to `true` for removal config mode. Used to remove entity from MQTT discovery.
 | discovery_prefix | string | homeassistant | Define custom MQTT discovery prefix.
