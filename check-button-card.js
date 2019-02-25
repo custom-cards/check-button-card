@@ -6,6 +6,9 @@ class CheckButtonCard extends HTMLElement {
   setConfig(config) {
     const root = this.shadowRoot;
 
+    // Version
+    config.required_version = "0.1.0";
+
     // Default Config Settings
     if(root.lastChild) root.removeChild(root.lastChild);
     if(!config.height) config.height = "40px";
@@ -98,6 +101,19 @@ class CheckButtonCard extends HTMLElement {
     submitConfigButton.id = "submitConfigButton";
     submitConfigButton.textContent = "✔";
 
+    // Update Bar
+    const updateBar = document.createElement('div');
+    updateBar.id = "updateBar";
+    updateBar.style.setProperty('visibility', 'hidden');
+    const updateInput = document.createElement("div");
+    updateInput.textContent = "Entity config outdated. Update?";
+    updateInput.id = "updateInput";
+    const updateForm = document.createElement("div");
+    updateForm.id = "updateForm";
+    const submitUpdateButton = document.createElement("div");
+    submitUpdateButton.id = "submitUpdateButton";
+    submitUpdateButton.textContent = "✔";
+
     // Style
     const style = document.createElement('style');
     style.textContent = `
@@ -181,7 +197,7 @@ class CheckButtonCard extends HTMLElement {
         width: 100%;
         `+titleStyle+`
       }
-      #inputBar, #configBar {
+      #inputBar, #configBar, #updateBar {
         position: absolute;
         display: table-cell;
         box-sizing: border-box;
@@ -202,13 +218,14 @@ class CheckButtonCard extends HTMLElement {
         border-color: #000;
         border: 2px solid gray;
       }
-      #configInput {
+      #configInput, #updateInput {
         right: 0px;
         text-shadow: 1px 1px #000;
         color: #FFF;
         font-weight: bold;
+        text-align: center;
       }
-      #submitButton, #submitConfigButton {
+      #submitButton, #submitConfigButton, #submitUpdateButton {
         text-align: center;
         cursor: pointer;
         position: relative;
@@ -218,10 +235,10 @@ class CheckButtonCard extends HTMLElement {
         font-size: 22px;
         font-weight: bold;
       }
-      #submitButton:hover, #submitConfigButton:hover {
+      #submitButton:hover, #submitConfigButton:hover, #submitUpdateButton:hover {
         font-size: 30px;
       }
-      #submitConfigButton {
+      #submitConfigButton, #submitUpdateButton {
         float: right;
       }
       #cancelButton {
@@ -242,7 +259,7 @@ class CheckButtonCard extends HTMLElement {
         left: 50%;
         margin-left: -57px;
       }
-      #configForm{
+      #configForm, #updateForm{
         position: absolute;
         width: 100%;
       }
@@ -255,8 +272,10 @@ class CheckButtonCard extends HTMLElement {
     // Build card.
     titleBar.appendChild(title);
 
+    // Create Button
     button.appendChild(buttonText);
 
+    // Create Input Bar
     inputForm.appendChild(daysInput);
     inputForm.appendChild(hoursInput);
     inputForm.appendChild(minutesInput);
@@ -264,17 +283,26 @@ class CheckButtonCard extends HTMLElement {
     inputBar.appendChild(inputForm);
     inputBar.appendChild(submitButton);
 
+    // Create Config Bar
     configForm.appendChild(configInput);
     configBar.appendChild(configForm);
     configBar.appendChild(submitConfigButton);
 
+    // Create Update Bar
+    updateForm.appendChild(updateInput);
+    updateBar.appendChild(updateForm);
+    updateBar.appendChild(submitUpdateButton);
+
+    // Inside check
     if(config.title_position != "inside"){
       background.appendChild(titleBar);
     }
 
+    // Create Background
     background.appendChild(button);
     background.appendChild(inputBar);
     background.appendChild(configBar);
+    background.appendChild(updateBar);
     background.appendChild(buttonBlocker);
     background.appendChild(undo);
     background.appendChild(style);
@@ -292,6 +320,7 @@ class CheckButtonCard extends HTMLElement {
     submitButton.addEventListener('mouseup', event => { this._setInputAction(); });
     cancelButton.addEventListener('mouseup', event => { this._hideInputAction(); });
     submitConfigButton.addEventListener('mouseup', event => { this._setConfigAction(); });
+    submitUpdateButton.addEventListener('mouseup', event => { this._setUpdateAction(); });
 
     // Add to root
     root.appendChild(card);
@@ -308,6 +337,9 @@ class CheckButtonCard extends HTMLElement {
       this._showConfigBar();
     }
     if(hass.states[config.entity] != undefined){
+      if(hass.states[config.entity].attributes.version != config.required_version){
+        this._showUpdateBar();
+      }
       if(hass.states[config.entity].attributes.unit_of_measurement != "timestamp" && this._configSet != true){
         this._showConfigBar();
       }
@@ -491,12 +523,12 @@ class CheckButtonCard extends HTMLElement {
     let payload;
 
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+this._currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":'+this._currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
     }
     else{
       payload = this._currentTimestamp;
     }
-    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
+    this._publish(payload);
   }
 
   _showUndo(){
@@ -522,11 +554,14 @@ class CheckButtonCard extends HTMLElement {
       payload = this._currentTimestamp;
     }
 
+    const sensorNameArray = config.entity.split(".");
+    const sensorName = sensorNameArray[1];
+
     function clearUndo(){
       root.getElementById("undo").style.setProperty('visibility', 'hidden');
       root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
       if(config.visibility_timeout != "none"){
-        mqttPublish.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
+        mqttPublish.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state", "payload" : payload, "retain": true});
       }
     }
 
@@ -548,7 +583,7 @@ class CheckButtonCard extends HTMLElement {
       payload = this._currentTimestamp;
     }
 
-    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
+    this._publish(payload);
     clearTimeout(this._clearUndo);
   }
 
@@ -572,7 +607,7 @@ class CheckButtonCard extends HTMLElement {
     else{
       payload = this._currentTimestamp;
     }
-    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+config.topic, "payload" : payload, "retain": true});
+    this._publish(payload);
     root.getElementById("undo").style.removeProperty('visibility');
     root.getElementById("buttonBlocker").style.removeProperty('visibility');
     this._currentTimestamp = timestamp;
@@ -613,15 +648,43 @@ class CheckButtonCard extends HTMLElement {
     }
   }
 
+  _showUpdateBar(){
+    const root = this.shadowRoot;
+    const config = this._config;
+    root.getElementById("updateBar").style.removeProperty('visibility');
+    if(this._hass.states[config.entity].attributes.version == undefined){
+
+    }
+  }
+
+  _setUpdateAction(){
+    const root = this.shadowRoot;
+    const config = this._config;
+    const sensorNameArray = config.entity.split(".");
+    const sensorName = sensorNameArray[1];
+    root.getElementById("updateBar").style.setProperty('visibility', 'hidden');
+    const discoveryConfig = '{"value_template": "{{ value_json.timestamp }}","json_attributes_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","state_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
+    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : discoveryConfig, "retain": true});
+    let payload = '{"timestamp":'+this._hass.states[config.entity].state+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
+    this._publish(payload);  
+  }
+
+  _publish(payload){
+    const config = this._config;
+    const sensorNameArray = config.entity.split(".");
+    const sensorName = sensorNameArray[1];
+    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state", "payload" : payload, "retain": true});
+  }
+
   _setConfigAction(){
     const root = this.shadowRoot;
     const config = this._config;
     const sensorNameArray = config.entity.split(".");
     const sensorName = sensorNameArray[1];
     root.getElementById("configBar").style.setProperty('visibility', 'hidden');
-    const discoveryConfig = '{"value_template": "{{ value_json.timestamp }}","json_attributes": ["visible","visibility_timeout","unit_of_measurement"],"state_topic": "'+config.discovery_prefix+'/'+config.topic+'","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
+    const discoveryConfig = '{"value_template": "{{ value_json.timestamp }}","json_attributes_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","state_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
     if(config.remove == true){
-      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/"+sensorName, "payload" : "", "retain": true});
+      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state", "payload" : "", "retain": true});
       this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : "", "retain": true});
     }
     else{
@@ -647,8 +710,6 @@ class CheckButtonCard extends HTMLElement {
       clearTimeout(this._showInputTimeout);
     }
   }
-
-  _buttonUp(){}
 
   getCardSize() {
     return 1;
