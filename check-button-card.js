@@ -602,7 +602,7 @@ class CheckButtonCard extends HTMLElement {
 
     let payload;
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+timestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":'+timestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
     }
     else{
       payload = this._currentTimestamp;
