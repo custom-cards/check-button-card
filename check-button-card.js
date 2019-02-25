@@ -548,7 +548,7 @@ class CheckButtonCard extends HTMLElement {
 
     let payload;
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":'+visibility+',"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":'+currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":'+visibility+',"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
     }
     else{
       payload = this._currentTimestamp;
@@ -577,7 +577,7 @@ class CheckButtonCard extends HTMLElement {
 
     let payload;
     if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+this._undoEntityState+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":'+this._undoEntityState+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
     }
     else{
       payload = this._currentTimestamp;
