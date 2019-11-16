@@ -337,9 +337,6 @@ class CheckButtonCard extends HTMLElement {
       this._showConfigBar();
     }
     if(hass.states[config.entity] != undefined){
-      if(hass.states[config.entity].attributes.version != config.required_version){
-        this._showUpdateBar();
-      }
       if(hass.states[config.entity].attributes.unit_of_measurement != "timestamp" && this._configSet != true){
         this._showConfigBar();
       }
