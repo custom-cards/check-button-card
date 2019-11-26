@@ -5,114 +5,131 @@ class CheckButtonCard extends HTMLElement {
   }
   setConfig(config) {
     const root = this.shadowRoot;
+    this.config = config;
 
     // Version
-    config.required_version = "0.1.0";
+    config.required_version = '0.1.0';
 
     // Default Config Settings
-    if(root.lastChild) root.removeChild(root.lastChild);
-    if(!config.height) config.height = "40px";
-    if(!config.saturation) config.saturation = "50%"
-    if(config.title_position != "inside"){
-      if(!config.width) config.width = "70%"; 
+    if (root.lastChild) root.removeChild(root.lastChild);
+    if (!config.height) config.height = '40px';
+    if (!config.saturation) config.saturation = '50%';
+    if (config.title_position != 'inside') {
+      if (!config.width) config.width = '70%';
+    } else {
+      if (!config.width) config.width = '100%';
     }
-    else{
-      if(!config.width) config.width = "100%"; 
-    }
-    if(!config.mode) config.mode = "homeassistant";
-    if(!config.discovery_prefix) config.discovery_prefix = "homeassistant";
-    if(!config.undo_timeout) config.undo_timeout = 15;
-    if(!config.visibility_timeout) config.visibility_timeout = "none";
-    const sensorNameArray = config.entity.split(".");
+    if (!config.mode) config.mode = 'homeassistant';
+    if (!config.discovery_prefix) config.discovery_prefix = 'homeassistant';
+    if (!config.undo_timeout) config.undo_timeout = 15;
+    if (!config.visibility_timeout) config.visibility_timeout = 'none';
+
+    // Default Localization Config
+    if (!config.displayTextYear) config.displayTextYear = 'year';
+    if (!config.displayTextYears) config.displayTextYears = 'years';
+    if (!config.displayTextMonth) config.displayTextMonth = 'month';
+    if (!config.displayTextMonths) config.displayTextMonths = 'months';
+    if (!config.displayTextWeek) config.displayTextWeek = 'week';
+    if (!config.displayTextWeeks) config.displayTextWeeks = 'weeks';
+    if (!config.displayTextDay) config.displayTextDay = 'day';
+    if (!config.displayTextDays) config.displayTextDays = 'days';
+    if (!config.displayTextHour) config.displayTextHour = 'hour';
+    if (!config.displayTextHours) config.displayTextHours = 'hours';
+    if (!config.displayTextMinute) config.displayTextMinute = 'minute';
+    if (!config.displayTextMinutes) config.displayTextMinutes = 'minutes';
+    if (!config.displayTextLessThan1) config.displayTextLessThan1 = 'less than 1';
+    if (!config.displayTextTimeAgo) config.displayTextTimeAgo = 'ago';
+
+    const sensorNameArray = config.entity.split('.');
     config.topic = sensorNameArray[1];
 
-    if(config.button_style){
-      var buttonStyle = this._customStyle(config.button_style)
+    if (config.button_style) {
+      var buttonStyle = this._customStyle(config.button_style);
     }
-    if(config.title_style){
-      var titleStyle = this._customStyle(config.title_style)
+    if (config.title_style) {
+      var titleStyle = this._customStyle(config.title_style);
     }
-    if(config.card_style){
-      var cardStyle = this._customStyle(config.card_style)
+    if (config.card_style) {
+      var cardStyle = this._customStyle(config.card_style);
     }
-    
+
     // Create card elements
     const card = document.createElement('ha-card');
     const background = document.createElement('div');
-    background.id = "background";
+    background.id = 'background';
 
     // Button
     const button = document.createElement('div');
-    button.id = "button";
+    button.id = 'button';
     const buttonText = document.createElement('div');
-    buttonText.id = "buttonText";
+    buttonText.id = 'buttonText';
 
     // Undo
     const undo = document.createElement('div');
-    undo.id = "undo";
+    undo.id = 'undo';
     undo.style.setProperty('visibility', 'hidden');
-    undo.textContent = "undo";
+    undo.textContent = 'undo';
     const buttonBlocker = document.createElement('div');
 
     // Button Blocker
-    buttonBlocker.id = "buttonBlocker";
+    buttonBlocker.id = 'buttonBlocker';
     buttonBlocker.style.setProperty('visibility', 'hidden');
     const title = document.createElement('div');
-    title.id = "title";
+    title.id = 'title';
     title.textContent = config.title;
     const titleBar = document.createElement('div');
-    titleBar.id = "titleBar";
+    titleBar.id = 'titleBar';
     const inputBar = document.createElement('div');
 
     // Input Bar
-    inputBar.id = "inputBar";
+    inputBar.id = 'inputBar';
     inputBar.style.setProperty('visibility', 'hidden');
-    const minutesInput = document.createElement("input");
-    minutesInput.type = "number";
-    minutesInput.id = "minutesInput";
-    minutesInput.placeholder = "mm";
-    const hoursInput = document.createElement("input");
-    hoursInput.type = "number";
-    hoursInput.id = "hoursInput";
-    hoursInput.placeholder = "hh";
-    const daysInput = document.createElement("input");
-    daysInput.type = "number";
-    daysInput.id = "daysInput";
-    daysInput.placeholder = "dd";
-    const inputForm = document.createElement("div");
-    inputForm.id = "inputForm";
-    const submitButton = document.createElement("div");
-    submitButton.id = "submitButton";
-    submitButton.textContent = "✔";
-    const cancelButton = document.createElement("div");
-    cancelButton.id = "cancelButton";
-    cancelButton.textContent = "✖";
+    const minutesInput = document.createElement('input');
+    minutesInput.type = 'number';
+    minutesInput.id = 'minutesInput';
+    minutesInput.placeholder = 'mm';
+    const hoursInput = document.createElement('input');
+    hoursInput.type = 'number';
+    hoursInput.id = 'hoursInput';
+    hoursInput.placeholder = 'hh';
+    const daysInput = document.createElement('input');
+    daysInput.type = 'number';
+    daysInput.id = 'daysInput';
+    daysInput.placeholder = 'dd';
+    const inputForm = document.createElement('div');
+    inputForm.id = 'inputForm';
+    const submitButton = document.createElement('div');
+    submitButton.id = 'submitButton';
+    submitButton.textContent = '✔';
+    const cancelButton = document.createElement('div');
+    cancelButton.id = 'cancelButton';
+    cancelButton.textContent = '✖';
 
     // Config Bar
     const configBar = document.createElement('div');
-    configBar.id = "configBar";
-    if(config.remove !== true) configBar.style.setProperty('visibility', 'hidden');
-    const configInput = document.createElement("div");
+    configBar.id = 'configBar';
+    if (config.remove !== true) configBar.style.setProperty('visibility', 'hidden');
+    const configInput = document.createElement('div');
     configInput.textContent = "Entity doesn't exist. Create?";
-    configInput.id = "configInput";
-    const configForm = document.createElement("div");
-    configForm.id = "configForm";
-    const submitConfigButton = document.createElement("div");
-    submitConfigButton.id = "submitConfigButton";
-    submitConfigButton.textContent = "✔";
+    configInput.id = 'configInput';
+    const configForm = document.createElement('div');
+    configForm.id = 'configForm';
+    const submitConfigButton = document.createElement('div');
+    submitConfigButton.id = 'submitConfigButton';
+    submitConfigButton.textContent = '✔';
 
     // Update Bar
     const updateBar = document.createElement('div');
-    updateBar.id = "updateBar";
+    updateBar.id = 'updateBar';
     updateBar.style.setProperty('visibility', 'hidden');
-    const updateInput = document.createElement("div");
-    updateInput.textContent = "Entity config outdated. Update?";
-    updateInput.id = "updateInput";
-    const updateForm = document.createElement("div");
-    updateForm.id = "updateForm";
-    const submitUpdateButton = document.createElement("div");
-    submitUpdateButton.id = "submitUpdateButton";
-    submitUpdateButton.textContent = "✔";
+    const updateInput = document.createElement('div');
+    updateInput.textContent = 'Entity config outdated. Update?';
+    updateInput.id = 'updateInput';
+    const updateForm = document.createElement('div');
+    updateForm.id = 'updateForm';
+    const submitUpdateButton = document.createElement('div');
+    submitUpdateButton.id = 'submitUpdateButton';
+    submitUpdateButton.textContent = '✔';
 
     // Style
     const style = document.createElement('style');
@@ -120,7 +137,7 @@ class CheckButtonCard extends HTMLElement {
       ha-card {
         background-color: var(--paper-card-background-color);
         padding: 4px;
-        `+cardStyle+`
+        ${cardStyle}
       }
       #background {
         position: relative;
@@ -138,7 +155,7 @@ class CheckButtonCard extends HTMLElement {
         --background-color: #000;
         right: 0;
         background-color: var(--background-color);
-        `+buttonStyle+`
+        ${buttonStyle}
       }
       #button:hover {
         cursor: pointer;
@@ -153,7 +170,7 @@ class CheckButtonCard extends HTMLElement {
         height: ${config.height};
         width: 1000px;
         vertical-align: middle;
-        `+buttonStyle+`
+        ${buttonStyle}
       }
       #buttonBlocker {
         position: absolute;
@@ -189,13 +206,13 @@ class CheckButtonCard extends HTMLElement {
         font-size: 14px;
         vertical-align: middle;
         color: var(--primary-text-color);
-        `+titleStyle+`
+        ${titleStyle}
       }
       #titleBar {
         position: absolute;
         height: ${config.height};
         width: 100%;
-        `+titleStyle+`
+        ${titleStyle}
       }
       #inputBar, #configBar, #updateBar {
         position: absolute;
@@ -294,7 +311,7 @@ class CheckButtonCard extends HTMLElement {
     updateBar.appendChild(submitUpdateButton);
 
     // Inside check
-    if(config.title_position != "inside"){
+    if (config.title_position != 'inside') {
       background.appendChild(titleBar);
     }
 
@@ -310,34 +327,57 @@ class CheckButtonCard extends HTMLElement {
     card.appendChild(background);
 
     // Events
-    button.addEventListener("mousedown", event => { this._buttonHold("down"); });
-    button.addEventListener("touchstart", event => { this._buttonHold("down"); });
-    button.addEventListener('mouseup', event => { this._buttonHold("up"); this._action(); });
-    button.addEventListener('touchend', event => { this._buttonHold("up"); });
-    buttonBlocker.addEventListener('mouseup', event => { this._buttonHold("up"); });
-    buttonBlocker.addEventListener('touchend', event => { this._buttonHold("up"); });
-    undo.addEventListener('mouseup', event => { this._undoAction(); });
-    submitButton.addEventListener('mouseup', event => { this._setInputAction(); });
-    cancelButton.addEventListener('mouseup', event => { this._hideInputAction(); });
-    submitConfigButton.addEventListener('mouseup', event => { this._setConfigAction(); });
-    submitUpdateButton.addEventListener('mouseup', event => { this._setUpdateAction(); });
+    button.addEventListener('mousedown', event => {
+      this._buttonHold('down');
+    });
+    button.addEventListener('touchstart', event => {
+      this._buttonHold('down');
+    });
+    button.addEventListener('mouseup', event => {
+      this._buttonHold('up');
+      this._action();
+    });
+    button.addEventListener('touchend', event => {
+      this._buttonHold('up');
+    });
+    buttonBlocker.addEventListener('mouseup', event => {
+      this._buttonHold('up');
+    });
+    buttonBlocker.addEventListener('touchend', event => {
+      this._buttonHold('up');
+    });
+    undo.addEventListener('mouseup', event => {
+      this._undoAction();
+    });
+    submitButton.addEventListener('mouseup', event => {
+      this._setInputAction();
+    });
+    cancelButton.addEventListener('mouseup', event => {
+      this._hideInputAction();
+    });
+    submitConfigButton.addEventListener('mouseup', event => {
+      this._setConfigAction();
+    });
+    submitUpdateButton.addEventListener('mouseup', event => {
+      this._setUpdateAction();
+    });
 
     // Add to root
     root.appendChild(card);
 
     this._config = config;
   }
-  
+
   // Create card.
   set hass(hass) {
     const config = this._config;
     this._hass = hass;
     let entityState;
-    if(hass.states[config.entity] == undefined || config.remove == true){
+    if (hass.states[config.entity] == undefined || config.remove == true) {
       this._showConfigBar();
     }
-    if(hass.states[config.entity] != undefined){
-      if(hass.states[config.entity].attributes.unit_of_measurement != "timestamp" && this._configSet != true){
+    if (hass.states[config.entity] != undefined) {
+      if (hass.states[config.entity].attributes.unit_of_measurement != 'timestamp' && this._configSet != true) {
         this._showConfigBar();
       }
       entityState = hass.states[config.entity].state;
@@ -349,48 +389,47 @@ class CheckButtonCard extends HTMLElement {
     this._entityState = entityState;
   }
 
-  _customStyle(style){
-    let styleString = "";
+  _customStyle(style) {
+    let styleString = '';
 
     Object.keys(style).forEach(section => {
-        styleString = styleString + section + ":" + style[section] + "; ";
+      styleString = styleString + section + ':' + style[section] + '; ';
     });
     return styleString;
   }
 
-  _convertToSeconds(time){
+  _convertToSeconds(time) {
     let output;
-    const timeFix = time+"";
-    let timeArray = timeFix.split(" ");
-    if(timeArray.length <= 1){
+    const timeFix = time + '';
+    let timeArray = timeFix.split(' ');
+    if (timeArray.length <= 1) {
       output = time;
-    }
-    else{
-      switch(timeArray[1]){
-        case "year":
-        case "years":
-          output = timeArray[0]*29030400;
+    } else {
+      switch (timeArray[1]) {
+        case 'year':
+        case 'years':
+          output = timeArray[0] * 29030400;
           break;
-        case "month":
-        case "months":
-          output = timeArray[0]*2419200
+        case 'month':
+        case 'months':
+          output = timeArray[0] * 2419200;
           break;
-        case "week":
-        case "weeks":
-          output = timeArray[0]*604800;
+        case 'week':
+        case 'weeks':
+          output = timeArray[0] * 604800;
           break;
-        case "day":
-        case "days":
-          output = timeArray[0]*86400;
+        case 'day':
+        case 'days':
+          output = timeArray[0] * 86400;
           break;
-        case "hour":
-        case "hours":
-          output = timeArray[0]*3600;
-          break; 
-        case "minute":   
-        case "minutes":
-          output = timeArray[0]*60;
-          break;    
+        case 'hour':
+        case 'hours':
+          output = timeArray[0] * 3600;
+          break;
+        case 'minute':
+        case 'minutes':
+          output = timeArray[0] * 60;
+          break;
       }
     }
     return output;
@@ -402,40 +441,37 @@ class CheckButtonCard extends HTMLElement {
     return counter;
   }
 
-  _timeIncrease(){
-    const root = this.shadowRoot; 
-    const config = this._config; 
+  _timeIncrease() {
+    const root = this.shadowRoot;
+    const config = this._config;
     const hass = this._hass;
     let entityState;
-    if(hass.states[config.entity] == undefined){
-      entityState = "undefined";
-    }
-    else{
+    if (hass.states[config.entity] == undefined) {
+      entityState = 'undefined';
+    } else {
       entityState = hass.states[config.entity].state;
-    } 
-    const convertTime = this._convertTime(entityState); 
+    }
+    const convertTime = this._convertTime(entityState);
     let displayTime = convertTime.displayTime;
     let displayText = convertTime.displayText;
     let hue;
 
-    if(!config.severity) {
+    if (!config.severity) {
       hue = 220;
-      if(config.hue){
+      if (config.hue) {
         hue = config.hue;
       }
-    }
-    else{
+    } else {
       hue = this._computeSeverity(convertTime.seconds, config.severity);
     }
-    if(config.title_position == "inside"){
-      root.getElementById("buttonText").textContent = `${config.title} \r\n${displayTime} ${displayText} ago`;
+    if (config.title_position == 'inside') {
+      root.getElementById('buttonText').textContent = `${config.title} \r\n${displayTime} ${displayText} ${this.config.displayTextTimeAgo}`;
+    } else {
+      root.getElementById('buttonText').textContent = `${displayTime} ${displayText} ${this.config.displayTextTimeAgo}`;
     }
-    else{
-      root.getElementById("buttonText").textContent = displayTime + " " + displayText + " ago" ;
-    }      
-    root.getElementById("button").style.setProperty('--background-color', "hsl("+hue+", "+config.saturation+", 50%");
-    root.getElementById("button").style.setProperty('--hover-background-color', "hsl("+hue+", "+config.saturation+", 60%");
-    root.getElementById("button").style.setProperty('--active-background-color', "hsl("+hue+", "+config.saturation+", 40%");
+    root.getElementById('button').style.setProperty('--background-color', 'hsl(' + hue + ', ' + config.saturation + ', 50%');
+    root.getElementById('button').style.setProperty('--hover-background-color', 'hsl(' + hue + ', ' + config.saturation + ', 60%');
+    root.getElementById('button').style.setProperty('--active-background-color', 'hsl(' + hue + ', ' + config.saturation + ', 40%');
   }
 
   _computeSeverity(stateValue, sections) {
@@ -448,87 +484,91 @@ class CheckButtonCard extends HTMLElement {
         hue = section.hue;
       }
     });
-    if(!hue) hue = sections[arrayLength - 1].hue;
+    if (!hue) hue = sections[arrayLength - 1].hue;
     return hue;
   }
 
-  _convertTime(entityState){
-    let elapsedTime = (Date.now()/1000 - Number(entityState));
+  _convertTime(entityState) {
+    let elapsedTime = Date.now() / 1000 - Number(entityState);
     let displayTime;
     let displayText;
     let seconds = elapsedTime;
     seconds = Math.trunc(seconds);
-    let minutes = seconds/60;
+    let minutes = seconds / 60;
     minutes = Math.trunc(minutes);
-    let hours = minutes/60;
-    hours = Math.trunc(hours)
-    let days = hours/24;
+    let hours = minutes / 60;
+    hours = Math.trunc(hours);
+    let days = hours / 24;
     days = Math.trunc(days);
-    let weeks = seconds/604800;
+    let weeks = seconds / 604800;
     weeks = Math.trunc(weeks);
-    let months = seconds/2678400;
+    let months = seconds / 2678400;
     months = Math.trunc(months);
-    let years = seconds/31536000;
+    let years = seconds / 31536000;
     years = Math.trunc(years);
 
-    if(years > 0){
+    if (years > 0) {
       displayTime = years;
-      if(years == 1) displayText = "year"
-      else displayText = "years";
-    }
-    else if(months > 0){
+      if (years == 1) displayText = this.config.displayTextYear;
+      else displayText = this.config.displayTextYears;
+    } else if (months > 0) {
       displayTime = months;
-      if(months == 1) displayText = "month"
-      else displayText = "months";
-    }
-    else if(weeks > 0){
+      if (months == 1) displayText = this.config.displayTextMonth;
+      else displayText = this.config.displayTextMonths;
+    } else if (weeks > 0) {
       displayTime = weeks;
-      if(weeks == 1) displayText = "week"
-      else displayText = "weeks";
-    }
-    else if(days > 0){
+      if (weeks == 1) displayText = this.config.displayTextWeek;
+      else displayText = this.config.displayTextWeeks;
+    } else if (days > 0) {
       displayTime = days;
-      displayText = "days";
-      if(days == 1) displayText = "day";
-      else displayText = "days";
-    }
-    else if(hours > 0){
+      displayText = this.config.displayTextDays;
+      if (days == 1) displayText = this.config.displayTextDay;
+      else displayText = this.config.displayTextDays;
+    } else if (hours > 0) {
       displayTime = hours;
-      if(hours == 1) displayText = "hour";
-      else displayText = "hours";     
-    }
-    else if(minutes > 0){
+      if (hours == 1) displayText = this.config.displayTextHour;
+      else displayText = this.config.displayTextHours;
+    } else if (minutes > 0) {
       displayTime = minutes;
-      if(minutes == 1) displayText = "minute";
-      else displayText = "minutes";
+      if (minutes == 1) displayText = this.config.displayTextMinute;
+      else displayText = this.config.displayTextMinutes;
+    } else {
+      displayTime = this.config.displayTextLessThan1;
+      displayText = this.config.displayTextMinute;
     }
-    else {
-      displayTime = "less than 1";
-      displayText = "minute";
-    }
-    return {"displayTime":displayTime, "displayText":displayText, "seconds":seconds};
+    return {
+      displayTime: displayTime,
+      displayText: displayText,
+      seconds: seconds,
+    };
   }
 
   _action() {
     const config = this._config;
     const root = this.shadowRoot;
-    root.getElementById("undo").style.removeProperty('visibility');
-    root.getElementById("buttonBlocker").style.removeProperty('visibility');
+    root.getElementById('undo').style.removeProperty('visibility');
+    root.getElementById('buttonBlocker').style.removeProperty('visibility');
     this._undoEntityState = this._entityState;
-    this._currentTimestamp = (Math.trunc(Date.now()/1000));
+    this._currentTimestamp = Math.trunc(Date.now() / 1000);
     this._clearUndo = this._showUndo();
     let payload;
 
-    if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+this._currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
-    }
-    else{
+    if (config.mode == 'homeassistant') {
+      payload =
+        '{"timestamp":' +
+        this._currentTimestamp +
+        ',"visibility_timeout":"' +
+        config.visibility_timeout +
+        '","visible":true,"unit_of_measurement":"timestamp","version":"' +
+        config.required_version +
+        '"}';
+    } else {
       payload = this._currentTimestamp;
     }
     this._publish(payload);
   }
 
-  _showUndo(){
+  _showUndo() {
     const root = this.shadowRoot;
     const config = this._config;
     const mqttPublish = this._hass;
@@ -536,47 +576,64 @@ class CheckButtonCard extends HTMLElement {
     const visibilityTimeout = this._convertToSeconds(config.visibility_timeout);
 
     let visibility;
-    if((Math.trunc(Date.now()/1000)) - visibilityTimeout >= currentTimestamp){
+    if (Math.trunc(Date.now() / 1000) - visibilityTimeout >= currentTimestamp) {
       visibility = true;
-    }
-    else{
+    } else {
       visibility = false;
     }
 
     let payload;
-    if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+currentTimestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":'+visibility+',"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
-    }
-    else{
+    if (config.mode == 'homeassistant') {
+      payload =
+        '{"timestamp":' +
+        currentTimestamp +
+        ',"visibility_timeout":"' +
+        config.visibility_timeout +
+        '","visible":' +
+        visibility +
+        ',"unit_of_measurement":"timestamp","version":"' +
+        config.required_version +
+        '"}';
+    } else {
       payload = this._currentTimestamp;
     }
 
-    const sensorNameArray = config.entity.split(".");
+    const sensorNameArray = config.entity.split('.');
     const sensorName = sensorNameArray[1];
 
-    function clearUndo(){
-      root.getElementById("undo").style.setProperty('visibility', 'hidden');
-      root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
-      if(config.visibility_timeout != "none"){
-        mqttPublish.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state", "payload" : payload, "retain": true});
+    function clearUndo() {
+      root.getElementById('undo').style.setProperty('visibility', 'hidden');
+      root.getElementById('buttonBlocker').style.setProperty('visibility', 'hidden');
+      if (config.visibility_timeout != 'none') {
+        mqttPublish.callService('mqtt', 'publish', {
+          topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
+          payload: payload,
+          retain: true,
+        });
       }
     }
 
-    var clearUndoReturn = setTimeout(clearUndo, config.undo_timeout*1000);
+    var clearUndoReturn = setTimeout(clearUndo, config.undo_timeout * 1000);
     return clearUndoReturn;
   }
 
-  _undoAction(){
-    const config = this._config; 
+  _undoAction() {
+    const config = this._config;
     const root = this.shadowRoot;
-    root.getElementById("undo").style.setProperty('visibility', 'hidden');
-    root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
+    root.getElementById('undo').style.setProperty('visibility', 'hidden');
+    root.getElementById('buttonBlocker').style.setProperty('visibility', 'hidden');
 
     let payload;
-    if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+this._undoEntityState+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
-    }
-    else{
+    if (config.mode == 'homeassistant') {
+      payload =
+        '{"timestamp":' +
+        this._undoEntityState +
+        ',"visibility_timeout":"' +
+        config.visibility_timeout +
+        '","visible":true,"unit_of_measurement":"timestamp","version":"' +
+        config.required_version +
+        '"}';
+    } else {
       payload = this._currentTimestamp;
     }
 
@@ -584,108 +641,164 @@ class CheckButtonCard extends HTMLElement {
     clearTimeout(this._clearUndo);
   }
 
-  _setInputAction(){
-    const config = this._config; 
+  _setInputAction() {
+    const config = this._config;
     const root = this.shadowRoot;
-    const minutes = root.getElementById("minutesInput").value;
-    const hours = root.getElementById("hoursInput").value;
-    const days = root.getElementById("daysInput").value;
-    const totalTime = (minutes*60)+(hours*3600)+(days*86400);
-    const timestamp = (Math.trunc(Date.now()/1000))-totalTime;
-    root.getElementById("inputBar").style.setProperty('visibility', 'hidden');
-    root.getElementById("minutesInput").value = "";
-    root.getElementById("hoursInput").value = "";
-    root.getElementById("daysInput").value = "";
+    const minutes = root.getElementById('minutesInput').value;
+    const hours = root.getElementById('hoursInput').value;
+    const days = root.getElementById('daysInput').value;
+    const totalTime = minutes * 60 + hours * 3600 + days * 86400;
+    const timestamp = Math.trunc(Date.now() / 1000) - totalTime;
+    root.getElementById('inputBar').style.setProperty('visibility', 'hidden');
+    root.getElementById('minutesInput').value = '';
+    root.getElementById('hoursInput').value = '';
+    root.getElementById('daysInput').value = '';
 
     let payload;
-    if(config.mode == "homeassistant"){
-      payload = '{"timestamp":'+timestamp+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
-    }
-    else{
+    if (config.mode == 'homeassistant') {
+      payload =
+        '{"timestamp":' +
+        timestamp +
+        ',"visibility_timeout":"' +
+        config.visibility_timeout +
+        '","visible":true,"unit_of_measurement":"timestamp","version":"' +
+        config.required_version +
+        '"}';
+    } else {
       payload = this._currentTimestamp;
     }
     this._publish(payload);
-    root.getElementById("undo").style.removeProperty('visibility');
-    root.getElementById("buttonBlocker").style.removeProperty('visibility');
+    root.getElementById('undo').style.removeProperty('visibility');
+    root.getElementById('buttonBlocker').style.removeProperty('visibility');
     this._currentTimestamp = timestamp;
     this._undoEntityState = this._entityState;
     this._clearUndo = this._showUndo();
   }
 
-  _showInputAction(){
+  _showInputAction() {
     const root = this.shadowRoot;
-    root.getElementById("inputBar").style.removeProperty('visibility');
+    root.getElementById('inputBar').style.removeProperty('visibility');
   }
 
-  _hideInputAction(){
+  _hideInputAction() {
     const root = this.shadowRoot;
-    root.getElementById("inputBar").style.setProperty('visibility', 'hidden');
+    root.getElementById('inputBar').style.setProperty('visibility', 'hidden');
   }
 
-  _showConfigBar(){
+  _showConfigBar() {
     const root = this.shadowRoot;
     const config = this._config;
-    root.getElementById("configBar").style.removeProperty('visibility');
-    if(config.remove == true){
-      if(this._hass.states[config.entity] != undefined){
-        root.getElementById("configInput").textContent = "Remove Entity?";
-      }      
-      else{
-        root.getElementById("submitConfigButton").style.setProperty('visibility', 'hidden');
-        root.getElementById("configInput").textContent = "Entity removed. Set remove to false.";
+    root.getElementById('configBar').style.removeProperty('visibility');
+    if (config.remove == true) {
+      if (this._hass.states[config.entity] != undefined) {
+        root.getElementById('configInput').textContent = 'Remove Entity?';
+      } else {
+        root.getElementById('submitConfigButton').style.setProperty('visibility', 'hidden');
+        root.getElementById('configInput').textContent = 'Entity removed. Set remove to false.';
       }
-      root.getElementById("configBar").style.setProperty('--background-color', '#FF0000');
+      root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
     }
-    if(this._hass.states[config.entity] != undefined){
-      if(this._hass.states[config.entity].attributes.unit_of_measurement != "timestamp"){
-        root.getElementById("submitConfigButton").style.setProperty('visibility', 'hidden');
-        root.getElementById("configInput").textContent = "Already exists. Incorrect entity type.";
-        root.getElementById("configBar").style.setProperty('--background-color', '#FF0000');
+    if (this._hass.states[config.entity] != undefined) {
+      if (this._hass.states[config.entity].attributes.unit_of_measurement != 'timestamp') {
+        root.getElementById('submitConfigButton').style.setProperty('visibility', 'hidden');
+        root.getElementById('configInput').textContent = 'Already exists. Incorrect entity type.';
+        root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
       }
     }
   }
 
-  _showUpdateBar(){
+  _showUpdateBar() {
     const root = this.shadowRoot;
     const config = this._config;
-    root.getElementById("updateBar").style.removeProperty('visibility');
-    if(this._hass.states[config.entity].attributes.version == undefined){
-
+    root.getElementById('updateBar').style.removeProperty('visibility');
+    if (this._hass.states[config.entity].attributes.version == undefined) {
     }
   }
 
-  _setUpdateAction(){
+  _setUpdateAction() {
     const root = this.shadowRoot;
     const config = this._config;
-    const sensorNameArray = config.entity.split(".");
+    const sensorNameArray = config.entity.split('.');
     const sensorName = sensorNameArray[1];
-    root.getElementById("updateBar").style.setProperty('visibility', 'hidden');
-    const discoveryConfig = '{"value_template": "{{ value_json.timestamp }}","json_attributes_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","state_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
-    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : discoveryConfig, "retain": true});
-    let payload = '{"timestamp":'+this._hass.states[config.entity].state+',"visibility_timeout":"'+config.visibility_timeout+'","visible":true,"unit_of_measurement":"timestamp","version":"'+config.required_version+'"}';
-    this._publish(payload);  
+    root.getElementById('updateBar').style.setProperty('visibility', 'hidden');
+    const discoveryConfig =
+      '{"value_template": "{{ value_json.timestamp }}","json_attributes_topic":"' +
+      config.discovery_prefix +
+      '/sensor/' +
+      sensorName +
+      '/state","state_topic":"' +
+      config.discovery_prefix +
+      '/sensor/' +
+      sensorName +
+      '/state","name": "' +
+      sensorName +
+      '","unique_id": "' +
+      sensorName +
+      '_homeassistant"}';
+    this._hass.callService('mqtt', 'publish', {
+      topic: config.discovery_prefix + '/sensor/' + sensorName + '/state/config',
+      payload: discoveryConfig,
+      retain: true,
+    });
+    let payload =
+      '{"timestamp":' +
+      this._hass.states[config.entity].state +
+      ',"visibility_timeout":"' +
+      config.visibility_timeout +
+      '","visible":true,"unit_of_measurement":"timestamp","version":"' +
+      config.required_version +
+      '"}';
+    this._publish(payload);
   }
 
-  _publish(payload){
+  _publish(payload) {
     const config = this._config;
-    const sensorNameArray = config.entity.split(".");
+    const sensorNameArray = config.entity.split('.');
     const sensorName = sensorNameArray[1];
-    this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state", "payload" : payload, "retain": true});
+    this._hass.callService('mqtt', 'publish', {
+      topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
+      payload: payload,
+      retain: true,
+    });
   }
 
-  _setConfigAction(){
+  _setConfigAction() {
     const root = this.shadowRoot;
     const config = this._config;
-    const sensorNameArray = config.entity.split(".");
+    const sensorNameArray = config.entity.split('.');
     const sensorName = sensorNameArray[1];
-    root.getElementById("configBar").style.setProperty('visibility', 'hidden');
-    const discoveryConfig = '{"value_template": "{{ value_json.timestamp }}","json_attributes_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","state_topic":"'+config.discovery_prefix+'/sensor/'+sensorName+'/state","name": "'+sensorName+'","unique_id": "'+sensorName+'_homeassistant"}';
-    if(config.remove == true){
-      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state", "payload" : "", "retain": true});
-      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : "", "retain": true});
-    }
-    else{
-      this._hass.callService("mqtt", "publish", {"topic" : config.discovery_prefix+"/sensor/"+sensorName+"/state/config", "payload" : discoveryConfig, "retain": true});
+    root.getElementById('configBar').style.setProperty('visibility', 'hidden');
+    const discoveryConfig =
+      '{"value_template": "{{ value_json.timestamp }}","json_attributes_topic":"' +
+      config.discovery_prefix +
+      '/sensor/' +
+      sensorName +
+      '/state","state_topic":"' +
+      config.discovery_prefix +
+      '/sensor/' +
+      sensorName +
+      '/state","name": "' +
+      sensorName +
+      '","unique_id": "' +
+      sensorName +
+      '_homeassistant"}';
+    if (config.remove == true) {
+      this._hass.callService('mqtt', 'publish', {
+        topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
+        payload: '',
+        retain: true,
+      });
+      this._hass.callService('mqtt', 'publish', {
+        topic: config.discovery_prefix + '/sensor/' + sensorName + '/state/config',
+        payload: '',
+        retain: true,
+      });
+    } else {
+      this._hass.callService('mqtt', 'publish', {
+        topic: config.discovery_prefix + '/sensor/' + sensorName + '/state/config',
+        payload: discoveryConfig,
+        retain: true,
+      });
       this._configSet = true;
       this._action();
     }
@@ -694,16 +807,15 @@ class CheckButtonCard extends HTMLElement {
   _buttonHold(state) {
     const root = this.shadowRoot;
 
-    function showConfig(){
-      root.getElementById("inputBar").style.removeProperty('visibility');
-      root.getElementById("buttonBlocker").style.removeProperty('visibility');
+    function showConfig() {
+      root.getElementById('inputBar').style.removeProperty('visibility');
+      root.getElementById('buttonBlocker').style.removeProperty('visibility');
     }
 
-    if(state == "down"){
+    if (state == 'down') {
       this._showInputTimeout = setTimeout(showConfig, 1000);
-    }
-    else if(state == "up"){
-      root.getElementById("buttonBlocker").style.setProperty('visibility', 'hidden');
+    } else if (state == 'up') {
+      root.getElementById('buttonBlocker').style.setProperty('visibility', 'hidden');
       clearTimeout(this._showInputTimeout);
     }
   }
