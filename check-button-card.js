@@ -488,6 +488,17 @@ class CheckButtonCard extends HTMLElement {
     return hue;
   }
 
+  _calculateVisibilityTimestamp(current_timestamp, visibility_timeout, payload) {
+    let json_payload;
+    let timestamp = this._convertToSeconds(visibility_timeout)
+    if (Number.isInteger(timestamp)) {
+      json_payload = JSON.parse(payload)
+      json_payload.visibility_timestamp = parseInt(current_timestamp) + timestamp
+      payload = JSON.stringify(json_payload)
+    }
+    return payload;
+  }
+
   _convertTime(entityState) {
     let elapsedTime = Date.now() / 1000 - Number(entityState);
     let displayTime;
@@ -562,6 +573,9 @@ class CheckButtonCard extends HTMLElement {
         '","visible":true,"unit_of_measurement":"timestamp","version":"' +
         config.required_version +
         '"}';
+      if (config.visibility_timeout != 'none') {
+        payload = this._calculateVisibilityTimestamp(this._currentTimestamp, config.visibility_timeout, payload);
+      }
     } else {
       payload = this._currentTimestamp;
     }
@@ -574,7 +588,7 @@ class CheckButtonCard extends HTMLElement {
     const mqttPublish = this._hass;
     const currentTimestamp = this._currentTimestamp;
     const visibilityTimeout = this._convertToSeconds(config.visibility_timeout);
-
+    
     let visibility;
     if (Math.trunc(Date.now() / 1000) - visibilityTimeout >= currentTimestamp) {
       visibility = true;
@@ -594,6 +608,9 @@ class CheckButtonCard extends HTMLElement {
         ',"unit_of_measurement":"timestamp","version":"' +
         config.required_version +
         '"}';
+      if (config.visibility_timeout != 'none') {
+        payload = this._calculateVisibilityTimestamp(currentTimestamp, config.visibility_timeout, payload);
+      }
     } else {
       payload = this._currentTimestamp;
     }
@@ -633,6 +650,9 @@ class CheckButtonCard extends HTMLElement {
         '","visible":true,"unit_of_measurement":"timestamp","version":"' +
         config.required_version +
         '"}';
+      if (config.visibility_timeout != 'none') {
+        payload = this._calculateVisibilityTimestamp(this._undoEntityState, config.visibility_timeout, payload);
+      }
     } else {
       payload = this._currentTimestamp;
     }
@@ -664,6 +684,9 @@ class CheckButtonCard extends HTMLElement {
         '","visible":true,"unit_of_measurement":"timestamp","version":"' +
         config.required_version +
         '"}';
+      if (config.visibility_timeout != 'none') {
+        payload = this._calculateVisibilityTimestamp(timestamp, config.visibility_timeout, payload);
+      }
     } else {
       payload = this._currentTimestamp;
     }
@@ -748,6 +771,9 @@ class CheckButtonCard extends HTMLElement {
       '","visible":true,"unit_of_measurement":"timestamp","version":"' +
       config.required_version +
       '"}';
+    if (config.visibility_timeout != 'none') {
+      payload = this._calculateVisibilityTimestamp(this._hass.states[config.entity].state, config.visibility_timeout, payload);
+    }
     this._publish(payload);
   }
 
