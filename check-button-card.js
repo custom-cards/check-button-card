@@ -588,7 +588,7 @@ class CheckButtonCard extends HTMLElement {
     const mqttPublish = this._hass;
     const currentTimestamp = this._currentTimestamp;
     const visibilityTimeout = this._convertToSeconds(config.visibility_timeout);
-    
+
     let visibility;
     if (Math.trunc(Date.now() / 1000) - visibilityTimeout >= currentTimestamp) {
       visibility = true;
