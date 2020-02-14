@@ -25,33 +25,11 @@ The visibility timeout can be used in combination with a conditional card to sho
 
 It is possible to publish to the MQTT topic using automations to update the button state using physical buttons for example (instead of using the UI button).
 
-The payload should be published to the relevant sensor. If you sensor is named `sensor.test_button` the topic should be `homeassistant/sensor/test_button/state`. For more information check out the Home Assistant [documentation](https://www.home-assistant.io/docs/mqtt/discovery/). 
+The payload should be published to the relevant sensor. If you sensor is named `sensor.test_button` the topic should be `homeassistant/test_button`. For more information check out the Home Assistant [documentation](https://www.home-assistant.io/docs/mqtt/discovery/). 
 
 ### Payload Example
 ``` json
 {"timestamp":"**timestamp here**","visibility_timeout":"2 hours","visible":true,"unit_of_measurement":"timestamp"}
-```
-### Node Red Example
-```
-// Define entity_id
-const entityId = "sensor.test_button";
-
-// Get global object
-const haObject = global.get("homeassistant");
-
-// Get attributes object from entity
-let payloadObject = haObject.homeAssistant.states[entityId].attributes;
-
-// Get current timestamp in seconds
-const currentTime = Math.trunc(Date.now()/1000);
-
-// Modify timestamp in payloadObject.
-payloadObject.timestamp = currentTime;
-
-// Create string from object
-msg.payload = JSON.stringify(payloadObject);
-
-return msg;
 ```
 
 ## Options
