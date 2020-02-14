@@ -11,6 +11,7 @@ Check Button Card is a button that tracks when it is last pressed, for the Home 
 - Hold button to set custom time.
 - Undo unwanted changes.
 - Publishes visibility attribute for use with conditional cards.
+- Publishes visibility timestamp attribute for use in automations (timestamp based on specified visibility_timeout value)
 - Possible to change button state by publishing to the topic with automations (Node-Red, etc).
 
 ## Installation
