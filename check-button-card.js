@@ -1,44 +1,50 @@
+console.info(
+  `%cCHECK-BUTTON-CARD\n%cVersion: 0.2.1`,
+  "color: green; font-weight: bold;",
+  ""
+);
+
 class CheckButtonCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
   }
   setConfig(config) {
+    config = Object.assign({}, config);
     const root = this.shadowRoot;
     this.config = config;
 
-    // Version
-    config.required_version = '0.1.0';
-
     // Default Config Settings
     if (root.lastChild) root.removeChild(root.lastChild);
-    if (!config.height) config.height = '40px';
-    if (!config.saturation) config.saturation = '50%';
+
+    const defaultConfig = {
+      height : '40px',
+      saturation : '50%',
+      mode : 'homeassistant',
+      discovery_prefix : 'homeassistant',
+      undo_timeout : 15,
+      visibility_timeout : 'none',
+      displayTextYear : 'year',
+      displayTextYears : 'years',
+      displayTextMonth : 'month',
+      displayTextMonths : 'months',
+      displayTextWeek : 'week',
+      displayTextWeeks : 'weeks',
+      displayTextDay : 'day',
+      displayTextDays : 'days',
+      displayTextHour : 'hour',
+      displayTextHours : 'hours',
+      displayTextMinute : 'minute',
+      displayTextMinutes : 'minutes',
+      displayTextLessThan1 : 'less than 1',
+      displayTextTimeAgo : 'ago'
+    }
     if (config.title_position != 'inside') {
       if (!config.width) config.width = '70%';
     } else {
       if (!config.width) config.width = '100%';
     }
-    if (!config.mode) config.mode = 'homeassistant';
-    if (!config.discovery_prefix) config.discovery_prefix = 'homeassistant';
-    if (!config.undo_timeout) config.undo_timeout = 15;
-    if (!config.visibility_timeout) config.visibility_timeout = 'none';
-
-    // Default Localization Config
-    if (!config.displayTextYear) config.displayTextYear = 'year';
-    if (!config.displayTextYears) config.displayTextYears = 'years';
-    if (!config.displayTextMonth) config.displayTextMonth = 'month';
-    if (!config.displayTextMonths) config.displayTextMonths = 'months';
-    if (!config.displayTextWeek) config.displayTextWeek = 'week';
-    if (!config.displayTextWeeks) config.displayTextWeeks = 'weeks';
-    if (!config.displayTextDay) config.displayTextDay = 'day';
-    if (!config.displayTextDays) config.displayTextDays = 'days';
-    if (!config.displayTextHour) config.displayTextHour = 'hour';
-    if (!config.displayTextHours) config.displayTextHours = 'hours';
-    if (!config.displayTextMinute) config.displayTextMinute = 'minute';
-    if (!config.displayTextMinutes) config.displayTextMinutes = 'minutes';
-    if (!config.displayTextLessThan1) config.displayTextLessThan1 = 'less than 1';
-    if (!config.displayTextTimeAgo) config.displayTextTimeAgo = 'ago';
+    config = Object.assign(config, defaultConfig);
 
     const sensorNameArray = config.entity.split('.');
     config.topic = sensorNameArray[1];
@@ -570,9 +576,7 @@ class CheckButtonCard extends HTMLElement {
         this._currentTimestamp +
         ',"visibility_timeout":"' +
         config.visibility_timeout +
-        '","visible":true,"unit_of_measurement":"timestamp","version":"' +
-        config.required_version +
-        '"}';
+        '","visible":true,"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(this._currentTimestamp, config.visibility_timeout, payload);
       }
@@ -605,9 +609,7 @@ class CheckButtonCard extends HTMLElement {
         config.visibility_timeout +
         '","visible":' +
         visibility +
-        ',"unit_of_measurement":"timestamp","version":"' +
-        config.required_version +
-        '"}';
+        ',"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(currentTimestamp, config.visibility_timeout, payload);
       }
@@ -647,9 +649,7 @@ class CheckButtonCard extends HTMLElement {
         this._undoEntityState +
         ',"visibility_timeout":"' +
         config.visibility_timeout +
-        '","visible":true,"unit_of_measurement":"timestamp","version":"' +
-        config.required_version +
-        '"}';
+        '","visible":true,"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(this._undoEntityState, config.visibility_timeout, payload);
       }
@@ -681,9 +681,7 @@ class CheckButtonCard extends HTMLElement {
         timestamp +
         ',"visibility_timeout":"' +
         config.visibility_timeout +
-        '","visible":true,"unit_of_measurement":"timestamp","version":"' +
-        config.required_version +
-        '"}';
+        '","visible":true,"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(timestamp, config.visibility_timeout, payload);
       }
@@ -768,9 +766,7 @@ class CheckButtonCard extends HTMLElement {
       this._hass.states[config.entity].state +
       ',"visibility_timeout":"' +
       config.visibility_timeout +
-      '","visible":true,"unit_of_measurement":"timestamp","version":"' +
-      config.required_version +
-      '"}';
+      '","visible":true,"unit_of_measurement":"timestamp"}';
     if (config.visibility_timeout != 'none') {
       payload = this._calculateVisibilityTimestamp(this._hass.states[config.entity].state, config.visibility_timeout, payload);
     }
