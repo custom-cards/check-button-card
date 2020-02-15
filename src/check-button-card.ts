@@ -1,44 +1,65 @@
-console.info(
-  `%cCHECK-BUTTON-CARD\n%cVersion: 0.2.1`,
-  "color: green; font-weight: bold;",
-  ""
-);
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.0b0`, 'color: green; font-weight: bold;', '');
+
+export interface config {
+  button_style: any;
+  card_style: any;
+  entity: string;
+  height: any;
+  remove: boolean;
+  saturation: any;
+  title_position: string;
+  title_style: any;
+  title: string | null;
+  topic: any;
+  width: string;
+}
 
 class CheckButtonCard extends HTMLElement {
+  shadowRoot: any;
+  _config: any;
+  _hass: any;
+  _counter: number = 0;
+  _entityState: number = 0;
+  _configSet: boolean = false;
+  _undoEntityState: number = 0;
+  _currentTimestamp: number = 0;
+  _clearUndo: any;
+  _showInputTimeout: any;
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
   }
-  setConfig(config) {
+  setConfig(config: config) {
     config = Object.assign({}, config);
     const root = this.shadowRoot;
-    this.config = config;
 
     // Default Config Settings
     if (root.lastChild) root.removeChild(root.lastChild);
 
     const defaultConfig = {
-      height : '40px',
-      saturation : '50%',
-      mode : 'homeassistant',
-      discovery_prefix : 'homeassistant',
-      undo_timeout : 15,
-      visibility_timeout : 'none',
-      displayTextYear : 'year',
-      displayTextYears : 'years',
-      displayTextMonth : 'month',
-      displayTextMonths : 'months',
-      displayTextWeek : 'week',
-      displayTextWeeks : 'weeks',
-      displayTextDay : 'day',
-      displayTextDays : 'days',
-      displayTextHour : 'hour',
-      displayTextHours : 'hours',
-      displayTextMinute : 'minute',
-      displayTextMinutes : 'minutes',
-      displayTextLessThan1 : 'less than 1',
-      displayTextTimeAgo : 'ago'
-    }
+      height: '40px',
+      saturation: '50%',
+      mode: 'homeassistant',
+      discovery_prefix: 'homeassistant',
+      undo_timeout: 15,
+      visibility_timeout: 'none',
+      text: {
+        year: 'year',
+        years: 'years',
+        month: 'month',
+        months: 'months',
+        week: 'week',
+        weeks: 'weeks',
+        day: 'day',
+        days: 'days',
+        hour: 'hour',
+        hours: 'hours',
+        minute: 'minute',
+        minutes: 'minutes',
+        less_than_1: 'less than 1',
+        ago: 'ago'
+      }
+    };
     if (config.title_position != 'inside') {
       if (!config.width) config.width = '70%';
     } else {
@@ -49,45 +70,27 @@ class CheckButtonCard extends HTMLElement {
     const sensorNameArray = config.entity.split('.');
     config.topic = sensorNameArray[1];
 
-    if (config.button_style) {
-      var buttonStyle = this._customStyle(config.button_style);
-    }
-    if (config.title_style) {
-      var titleStyle = this._customStyle(config.title_style);
-    }
-    if (config.card_style) {
-      var cardStyle = this._customStyle(config.card_style);
-    }
-
     // Create card elements
     const card = document.createElement('ha-card');
     const background = document.createElement('div');
     background.id = 'background';
-
-    // Button
-    const button = document.createElement('div');
+    const button = document.createElement('cb-card-button');
     button.id = 'button';
-    const buttonText = document.createElement('div');
+    const buttonText = document.createElement('cb-card-buttontext');
     buttonText.id = 'buttonText';
-
-    // Undo
-    const undo = document.createElement('div');
+    const undo = document.createElement('cb-card-undo');
     undo.id = 'undo';
     undo.style.setProperty('visibility', 'hidden');
     undo.textContent = 'undo';
-    const buttonBlocker = document.createElement('div');
-
-    // Button Blocker
+    const buttonBlocker = document.createElement('cb-card-buttonblocker');
     buttonBlocker.id = 'buttonBlocker';
     buttonBlocker.style.setProperty('visibility', 'hidden');
-    const title = document.createElement('div');
+    const title = document.createElement('cb-card-title');
     title.id = 'title';
     title.textContent = config.title;
-    const titleBar = document.createElement('div');
+    const titleBar = document.createElement('cb-card-titlebar');
     titleBar.id = 'titleBar';
-    const inputBar = document.createElement('div');
-
-    // Input Bar
+    const inputBar = document.createElement('cb-card-inputbar');
     inputBar.id = 'inputBar';
     inputBar.style.setProperty('visibility', 'hidden');
     const minutesInput = document.createElement('input');
@@ -102,38 +105,38 @@ class CheckButtonCard extends HTMLElement {
     daysInput.type = 'number';
     daysInput.id = 'daysInput';
     daysInput.placeholder = 'dd';
-    const inputForm = document.createElement('div');
+    const inputForm = document.createElement('cb-card-inputform');
     inputForm.id = 'inputForm';
-    const submitButton = document.createElement('div');
+    const submitButton = document.createElement('cb-card-submitbutton');
     submitButton.id = 'submitButton';
     submitButton.textContent = '✔';
-    const cancelButton = document.createElement('div');
+    const cancelButton = document.createElement('cb-card-cancelbutton');
     cancelButton.id = 'cancelButton';
     cancelButton.textContent = '✖';
 
     // Config Bar
-    const configBar = document.createElement('div');
+    const configBar = document.createElement('cb-card-configbar');
     configBar.id = 'configBar';
     if (config.remove !== true) configBar.style.setProperty('visibility', 'hidden');
-    const configInput = document.createElement('div');
+    const configInput = document.createElement('cb-card-configinput');
     configInput.textContent = "Entity doesn't exist. Create?";
     configInput.id = 'configInput';
-    const configForm = document.createElement('div');
+    const configForm = document.createElement('cb-card-configform');
     configForm.id = 'configForm';
-    const submitConfigButton = document.createElement('div');
+    const submitConfigButton = document.createElement('cb-card-submitconfigbutton');
     submitConfigButton.id = 'submitConfigButton';
     submitConfigButton.textContent = '✔';
 
     // Update Bar
-    const updateBar = document.createElement('div');
+    const updateBar = document.createElement('cb-card-updatebar');
     updateBar.id = 'updateBar';
     updateBar.style.setProperty('visibility', 'hidden');
-    const updateInput = document.createElement('div');
+    const updateInput = document.createElement('cb-card-updateinput');
     updateInput.textContent = 'Entity config outdated. Update?';
     updateInput.id = 'updateInput';
-    const updateForm = document.createElement('div');
+    const updateForm = document.createElement('cb-card-updateform');
     updateForm.id = 'updateForm';
-    const submitUpdateButton = document.createElement('div');
+    const submitUpdateButton = document.createElement('cb-card-submitupdatebutton');
     submitUpdateButton.id = 'submitUpdateButton';
     submitUpdateButton.textContent = '✔';
 
@@ -143,7 +146,6 @@ class CheckButtonCard extends HTMLElement {
       ha-card {
         background-color: var(--paper-card-background-color);
         padding: 4px;
-        ${cardStyle}
       }
       #background {
         position: relative;
@@ -161,7 +163,6 @@ class CheckButtonCard extends HTMLElement {
         --background-color: #000;
         right: 0;
         background-color: var(--background-color);
-        ${buttonStyle}
       }
       #button:hover {
         cursor: pointer;
@@ -176,7 +177,6 @@ class CheckButtonCard extends HTMLElement {
         height: ${config.height};
         width: 1000px;
         vertical-align: middle;
-        ${buttonStyle}
       }
       #buttonBlocker {
         position: absolute;
@@ -212,13 +212,11 @@ class CheckButtonCard extends HTMLElement {
         font-size: 14px;
         vertical-align: middle;
         color: var(--primary-text-color);
-        ${titleStyle}
       }
       #titleBar {
         position: absolute;
         height: ${config.height};
         width: 100%;
-        ${titleStyle}
       }
       #inputBar, #configBar, #updateBar {
         position: absolute;
@@ -286,9 +284,9 @@ class CheckButtonCard extends HTMLElement {
         position: absolute;
         width: 100%;
       }
-      input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { 
-        -webkit-appearance: none; 
-        margin: 0; 
+      input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
       }
     `;
 
@@ -375,7 +373,7 @@ class CheckButtonCard extends HTMLElement {
   }
 
   // Create card.
-  set hass(hass) {
+  set hass(hass: any) {
     const config = this._config;
     this._hass = hass;
     let entityState;
@@ -395,19 +393,10 @@ class CheckButtonCard extends HTMLElement {
     this._entityState = entityState;
   }
 
-  _customStyle(style) {
-    let styleString = '';
-
-    Object.keys(style).forEach(section => {
-      styleString = styleString + section + ':' + style[section] + '; ';
-    });
-    return styleString;
-  }
-
-  _convertToSeconds(time) {
+  _convertToSeconds(time: string) {
     let output;
     const timeFix = time + '';
-    let timeArray = timeFix.split(' ');
+    let timeArray: any[] = timeFix.split(' ');
     if (timeArray.length <= 1) {
       output = time;
     } else {
@@ -438,16 +427,17 @@ class CheckButtonCard extends HTMLElement {
           break;
       }
     }
+    output = Number(output);
     return output;
   }
 
   _startTimer() {
     this._timeIncrease();
-    var counter = setInterval(this._timeIncrease(), 10000);
+    var counter = setInterval(() => this._timeIncrease(), 10000);
     return counter;
   }
 
-  _timeIncrease() {
+  _timeIncrease(): void {
     const root = this.shadowRoot;
     const config = this._config;
     const hass = this._hass;
@@ -471,21 +461,21 @@ class CheckButtonCard extends HTMLElement {
       hue = this._computeSeverity(convertTime.seconds, config.severity);
     }
     if (config.title_position == 'inside') {
-      root.getElementById('buttonText').textContent = `${config.title} \r\n${displayTime} ${displayText} ${this.config.displayTextTimeAgo}`;
+      root.getElementById('buttonText').textContent = `${config.title} \r\n${displayTime} ${displayText} ${this._config.text.ago}`;
     } else {
-      root.getElementById('buttonText').textContent = `${displayTime} ${displayText} ${this.config.displayTextTimeAgo}`;
+      root.getElementById('buttonText').textContent = `${displayTime} ${displayText} ${this._config.text.ago}`;
     }
     root.getElementById('button').style.setProperty('--background-color', 'hsl(' + hue + ', ' + config.saturation + ', 50%');
     root.getElementById('button').style.setProperty('--hover-background-color', 'hsl(' + hue + ', ' + config.saturation + ', 60%');
     root.getElementById('button').style.setProperty('--active-background-color', 'hsl(' + hue + ', ' + config.saturation + ', 40%');
   }
 
-  _computeSeverity(stateValue, sections) {
+  _computeSeverity(stateValue: number, sections: any[]) {
     let numberValue = Number(stateValue);
-    let hue;
+    let hue: any;
     const arrayLength = sections.length;
     sections.forEach(section => {
-      const computedSeconds = this._convertToSeconds(section.value);
+      const computedSeconds: number = this._convertToSeconds(section.value);
       if (numberValue <= computedSeconds && !hue) {
         hue = section.hue;
       }
@@ -494,18 +484,18 @@ class CheckButtonCard extends HTMLElement {
     return hue;
   }
 
-  _calculateVisibilityTimestamp(current_timestamp, visibility_timeout, payload) {
+  _calculateVisibilityTimestamp(current_timestamp: number, visibility_timeout: string, payload: string) {
     let json_payload;
-    let timestamp = this._convertToSeconds(visibility_timeout)
+    let timestamp: number = this._convertToSeconds(visibility_timeout);
     if (Number.isInteger(timestamp)) {
-      json_payload = JSON.parse(payload)
-      json_payload.visibility_timestamp = parseInt(current_timestamp) + timestamp
-      payload = JSON.stringify(json_payload)
+      json_payload = JSON.parse(payload);
+      json_payload.visibility_timestamp = current_timestamp + timestamp;
+      payload = JSON.stringify(json_payload);
     }
     return payload;
   }
 
-  _convertTime(entityState) {
+  _convertTime(entityState: number) {
     let elapsedTime = Date.now() / 1000 - Number(entityState);
     let displayTime;
     let displayText;
@@ -526,37 +516,37 @@ class CheckButtonCard extends HTMLElement {
 
     if (years > 0) {
       displayTime = years;
-      if (years == 1) displayText = this.config.displayTextYear;
-      else displayText = this.config.displayTextYears;
+      if (years == 1) displayText = this._config.text.year;
+      else displayText = this._config.text.years;
     } else if (months > 0) {
       displayTime = months;
-      if (months == 1) displayText = this.config.displayTextMonth;
-      else displayText = this.config.displayTextMonths;
+      if (months == 1) displayText = this._config.text.month;
+      else displayText = this._config.text.months;
     } else if (weeks > 0) {
       displayTime = weeks;
-      if (weeks == 1) displayText = this.config.displayTextWeek;
-      else displayText = this.config.displayTextWeeks;
+      if (weeks == 1) displayText = this._config.text.week;
+      else displayText = this._config.text.weeks;
     } else if (days > 0) {
       displayTime = days;
-      displayText = this.config.displayTextDays;
-      if (days == 1) displayText = this.config.displayTextDay;
-      else displayText = this.config.displayTextDays;
+      displayText = this._config.text.days;
+      if (days == 1) displayText = this._config.text.day;
+      else displayText = this._config.text.days;
     } else if (hours > 0) {
       displayTime = hours;
-      if (hours == 1) displayText = this.config.displayTextHour;
-      else displayText = this.config.displayTextHours;
+      if (hours == 1) displayText = this._config.text.hour;
+      else displayText = this._config.text.hours;
     } else if (minutes > 0) {
       displayTime = minutes;
-      if (minutes == 1) displayText = this.config.displayTextMinute;
-      else displayText = this.config.displayTextMinutes;
+      if (minutes == 1) displayText = this._config.text.minute;
+      else displayText = this._config.text.minutes;
     } else {
-      displayTime = this.config.displayTextLessThan1;
-      displayText = this.config.displayTextMinute;
+      displayTime = this._config.text.less_than_1;
+      displayText = this._config.text.minute;
     }
     return {
       displayTime: displayTime,
       displayText: displayText,
-      seconds: seconds,
+      seconds: seconds
     };
   }
 
@@ -568,15 +558,10 @@ class CheckButtonCard extends HTMLElement {
     this._undoEntityState = this._entityState;
     this._currentTimestamp = Math.trunc(Date.now() / 1000);
     this._clearUndo = this._showUndo();
-    let payload;
+    let payload: any;
 
     if (config.mode == 'homeassistant') {
-      payload =
-        '{"timestamp":' +
-        this._currentTimestamp +
-        ',"visibility_timeout":"' +
-        config.visibility_timeout +
-        '","visible":true,"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":' + this._currentTimestamp + ',"visibility_timeout":"' + config.visibility_timeout + '","visible":true,"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(this._currentTimestamp, config.visibility_timeout, payload);
       }
@@ -591,7 +576,7 @@ class CheckButtonCard extends HTMLElement {
     const config = this._config;
     const mqttPublish = this._hass;
     const currentTimestamp = this._currentTimestamp;
-    const visibilityTimeout = this._convertToSeconds(config.visibility_timeout);
+    const visibilityTimeout: number = this._convertToSeconds(config.visibility_timeout);
 
     let visibility;
     if (Math.trunc(Date.now() / 1000) - visibilityTimeout >= currentTimestamp) {
@@ -600,16 +585,9 @@ class CheckButtonCard extends HTMLElement {
       visibility = false;
     }
 
-    let payload;
+    let payload: any;
     if (config.mode == 'homeassistant') {
-      payload =
-        '{"timestamp":' +
-        currentTimestamp +
-        ',"visibility_timeout":"' +
-        config.visibility_timeout +
-        '","visible":' +
-        visibility +
-        ',"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":' + currentTimestamp + ',"visibility_timeout":"' + config.visibility_timeout + '","visible":' + visibility + ',"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(currentTimestamp, config.visibility_timeout, payload);
       }
@@ -627,7 +605,7 @@ class CheckButtonCard extends HTMLElement {
         mqttPublish.callService('mqtt', 'publish', {
           topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
           payload: payload,
-          retain: true,
+          retain: true
         });
       }
     }
@@ -642,14 +620,9 @@ class CheckButtonCard extends HTMLElement {
     root.getElementById('undo').style.setProperty('visibility', 'hidden');
     root.getElementById('buttonBlocker').style.setProperty('visibility', 'hidden');
 
-    let payload;
+    let payload: any;
     if (config.mode == 'homeassistant') {
-      payload =
-        '{"timestamp":' +
-        this._undoEntityState +
-        ',"visibility_timeout":"' +
-        config.visibility_timeout +
-        '","visible":true,"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":' + this._undoEntityState + ',"visibility_timeout":"' + config.visibility_timeout + '","visible":true,"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(this._undoEntityState, config.visibility_timeout, payload);
       }
@@ -674,14 +647,9 @@ class CheckButtonCard extends HTMLElement {
     root.getElementById('hoursInput').value = '';
     root.getElementById('daysInput').value = '';
 
-    let payload;
+    let payload: any;
     if (config.mode == 'homeassistant') {
-      payload =
-        '{"timestamp":' +
-        timestamp +
-        ',"visibility_timeout":"' +
-        config.visibility_timeout +
-        '","visible":true,"unit_of_measurement":"timestamp"}';
+      payload = '{"timestamp":' + timestamp + ',"visibility_timeout":"' + config.visibility_timeout + '","visible":true,"unit_of_measurement":"timestamp"}';
       if (config.visibility_timeout != 'none') {
         payload = this._calculateVisibilityTimestamp(timestamp, config.visibility_timeout, payload);
       }
@@ -759,28 +727,23 @@ class CheckButtonCard extends HTMLElement {
     this._hass.callService('mqtt', 'publish', {
       topic: config.discovery_prefix + '/sensor/' + sensorName + '/state/config',
       payload: discoveryConfig,
-      retain: true,
+      retain: true
     });
-    let payload =
-      '{"timestamp":' +
-      this._hass.states[config.entity].state +
-      ',"visibility_timeout":"' +
-      config.visibility_timeout +
-      '","visible":true,"unit_of_measurement":"timestamp"}';
+    let payload = '{"timestamp":' + this._hass.states[config.entity].state + ',"visibility_timeout":"' + config.visibility_timeout + '","visible":true,"unit_of_measurement":"timestamp"}';
     if (config.visibility_timeout != 'none') {
       payload = this._calculateVisibilityTimestamp(this._hass.states[config.entity].state, config.visibility_timeout, payload);
     }
     this._publish(payload);
   }
 
-  _publish(payload) {
+  _publish(payload: string) {
     const config = this._config;
     const sensorNameArray = config.entity.split('.');
     const sensorName = sensorNameArray[1];
     this._hass.callService('mqtt', 'publish', {
       topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
       payload: payload,
-      retain: true,
+      retain: true
     });
   }
 
@@ -808,25 +771,25 @@ class CheckButtonCard extends HTMLElement {
       this._hass.callService('mqtt', 'publish', {
         topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
         payload: '',
-        retain: true,
+        retain: true
       });
       this._hass.callService('mqtt', 'publish', {
         topic: config.discovery_prefix + '/sensor/' + sensorName + '/state/config',
         payload: '',
-        retain: true,
+        retain: true
       });
     } else {
       this._hass.callService('mqtt', 'publish', {
         topic: config.discovery_prefix + '/sensor/' + sensorName + '/state/config',
         payload: discoveryConfig,
-        retain: true,
+        retain: true
       });
       this._configSet = true;
       this._action();
     }
   }
 
-  _buttonHold(state) {
+  _buttonHold(state: string) {
     const root = this.shadowRoot;
 
     function showConfig() {
