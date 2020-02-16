@@ -1,6 +1,7 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.0b1`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.0b2`, 'color: green; font-weight: bold;', '');
 
 export interface config {
+  text: any;
   button_style: any;
   card_style: any;
   entity: string;
@@ -24,6 +25,7 @@ class CheckButtonCard extends HTMLElement {
   _currentTimestamp: number = 0;
   _clearUndo: any;
   _showInputTimeout: any;
+  _overBy: boolean = false;
 
   constructor() {
     super();
@@ -34,12 +36,14 @@ class CheckButtonCard extends HTMLElement {
   setConfig(config: config) {
     const root = this.shadowRoot;
 
+    // Avoid card config modifying lovelace config.
+    config = Object.assign({}, config);
+
     // Default Config Settings
     if (root.lastChild) root.removeChild(root.lastChild);
 
     const defaultConfig = {
       height: '40px',
-      mode: 'homeassistant',
       discovery_prefix: 'homeassistant',
       undo_timeout: 15,
       color: 'var(--checkbutton-card-color, var(--primary-color))',
@@ -57,17 +61,18 @@ class CheckButtonCard extends HTMLElement {
         minute: 'minute',
         minutes: 'minutes',
         less_than_1: 'less than 1',
-        ago: 'ago'
+        ago: 'ago',
+        due_in: 'due in',
+        over_by: 'over by'
       },
-      time_display: 'auto',
-      payload: {
-        timestamp: null,
-        timeout: null,
-        unit_of_measurement: "timestamp"
-      }
+      display_limit: 'auto',
+      due: false
     };
 
-    // Merge default and card config, this also avoids this card config modifying the lovelace config object.
+    // Merge text objects
+    config.text = Object.assign(defaultConfig.text, config.text)
+
+    // Merge default and card config.
     config = Object.assign(defaultConfig, config);
 
     if (config.title_position != 'inside') {
@@ -404,8 +409,14 @@ class CheckButtonCard extends HTMLElement {
     if (config.severity) color = this._computeSeverity(convertTime.seconds, config.severity);
     else color = config.color;
 
-    if (config.title_position == 'inside') root.getElementById('buttonText').textContent = `${config.title} \r\n${displayTime} ${displayText} ${this._config.text.ago}`;
-    else root.getElementById('buttonText').textContent = `${displayTime} ${displayText} ${this._config.text.ago}`;
+    let textContent;
+    if (config.due == true) {
+      if (this._overBy == false) textContent = `${config.text.due_in} ${displayTime} ${displayText}`;
+      else textContent = `${config.text.over_by} ${displayTime} ${displayText}`
+    }
+    else textContent = `${displayTime} ${displayText} ${this._config.text.ago}`;
+    if (config.title_position == 'inside') root.getElementById('buttonText').textContent = `${config.title} \r\n${textContent}`;
+    else root.getElementById('buttonText').textContent = `${textContent}`;
 
     root.getElementById('button').style.setProperty('--background-color', color);
     root.getElementById('button').style.setProperty('--hover-background-color', color);
@@ -468,53 +479,65 @@ class CheckButtonCard extends HTMLElement {
 
   // Converts seconds into text string.
   _convertToText(entityState: number) {
-    let elapsedTime = Date.now() / 1000 - Number(entityState);
+    const config = this._config;
+
+    const timeout = this._convertToSeconds(config.timeout);
+    const dueTime = Number(entityState) + timeout;
+    const remainingTime = dueTime - Math.trunc(Date.now() / 1000);
+
+    const elapsedTime = Date.now() / 1000 - Number(entityState);
+
     let displayTime;
     let displayText;
-    let seconds = elapsedTime;
-    seconds = Math.trunc(seconds);
+    let seconds;
+    if (config.due == true){
+      seconds = remainingTime;
+    } else {
+      seconds = elapsedTime;
+    }
+    let isSign = Math.sign(seconds)
+    if (isSign == -1) {
+      seconds = Math.abs(seconds);
+      this._overBy = true;
+    } else {
+      this._overBy = false;
+    }
     let minutes = seconds / 60;
-    minutes = Math.trunc(minutes);
     let hours = minutes / 60;
-    hours = Math.trunc(hours);
     let days = hours / 24;
-    days = Math.trunc(days);
     let weeks = seconds / 604800;
-    weeks = Math.trunc(weeks);
     let months = seconds / 2678400;
-    months = Math.trunc(months);
     let years = seconds / 31536000;
-    years = Math.trunc(years);
 
-    const timeDisplay = this._config.time_display;
+    const displayLimit = this._config.display_limit;
 
-    if (minutes < 1 || timeDisplay == "minutes") {
+    if (minutes < 1.5 || displayLimit == "minutes") {
       displayTime = this._config.text.less_than_1;
       displayText = this._config.text.minute;
-    } else if (hours < 1 || timeDisplay == "minutes") {
-      displayTime = minutes;
-      if (minutes == 1) displayText = this._config.text.minute;
+    } else if (hours < 1.5 || displayLimit == "minutes") {
+      displayTime = Math.trunc(minutes);
+      if (displayTime == 1) displayText = this._config.text.minute;
       else displayText = this._config.text.minutes;
-    } else if (days < 1 || timeDisplay == "hours") {
-      displayTime = hours;
-      if (hours == 1) displayText = this._config.text.hour;
+    } else if (days < 1.5 || displayLimit == "hours") {
+      displayTime = Math.trunc(hours);
+      if (displayTime == 1) displayText = this._config.text.hour;
       else displayText = this._config.text.hours;
-    } else if (weeks < 1 || timeDisplay == "days") {
-      displayTime = days;
+    } else if (weeks < 1.5 || displayLimit == "days") {
+      displayTime = Math.trunc(days);
       displayText = this._config.text.days;
-      if (days == 1 ) displayText = this._config.text.day;
+      if (displayTime == 1 ) displayText = this._config.text.day;
       else displayText = this._config.text.days;
-    } else if (months < 1 || timeDisplay == "weeks") {
-      displayTime = weeks;
-      if (weeks == 1) displayText = this._config.text.week;
+    } else if (months < 1.5 || displayLimit == "weeks") {
+      displayTime = Math.trunc(weeks);
+      if (displayTime == 1) displayText = this._config.text.week;
       else displayText = this._config.text.weeks;
-    } else if (years < 1 || timeDisplay == "months") {
-      displayTime = months;
-      if (months == 1) displayText = this._config.text.month;
+    } else if (years < 1.5 || displayLimit == "months") {
+      displayTime = Math.trunc(months);
+      if (displayTime == 1) displayText = this._config.text.month;
       else displayText = this._config.text.months;
-    } else if (years >= 1 || timeDisplay == "years") {
-      displayTime = years;
-      if (years == 1) displayText = this._config.text.year;
+    } else if (years >= 1.5 || displayLimit == "years") {
+      displayTime = Math.trunc(years);
+      if (displayTime == 1) displayText = this._config.text.year;
       else displayText = this._config.text.years;
     }
 
@@ -533,6 +556,7 @@ class CheckButtonCard extends HTMLElement {
       if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + this._currentTimestamp;
       payload.severity = config.severity;
       payload.unit_of_measurement = 'timestamp';
+      if (config.automation) payload.automation = config.automation;
       payload = JSON.stringify(payload)
     return payload
   }
