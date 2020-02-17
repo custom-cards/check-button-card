@@ -425,7 +425,9 @@ class CheckButtonCard extends HTMLElement {
 
   // Returns color based on severity array
   _computeSeverity(stateValue: any, sections: any[]) {
-    const numberValue = Number(stateValue);
+    let numberValue = Number(stateValue);
+    if (this._overBy == true) numberValue = numberValue * -1;
+    console.log(numberValue)
     let color: null | string = null;
 
     sections.forEach(section => {
@@ -511,27 +513,27 @@ class CheckButtonCard extends HTMLElement {
 
     const displayLimit = this._config.display_limit;
 
-    if (minutes < 1.5 || displayLimit == "minutes") {
+    if (minutes < 1 || displayLimit == "minutes") {
       displayTime = this._config.text.less_than_1;
       displayText = this._config.text.minute;
-    } else if (hours < 1.5 || displayLimit == "minutes") {
+    } else if (hours < 1 || displayLimit == "minutes") {
       displayTime = Math.trunc(minutes);
       if (displayTime == 1) displayText = this._config.text.minute;
       else displayText = this._config.text.minutes;
-    } else if (days < 1.5 || displayLimit == "hours") {
+    } else if (days < 1 || displayLimit == "hours") {
       displayTime = Math.trunc(hours);
       if (displayTime == 1) displayText = this._config.text.hour;
       else displayText = this._config.text.hours;
-    } else if (weeks < 1.5 || displayLimit == "days") {
+    } else if (weeks < 1 || displayLimit == "days") {
       displayTime = Math.trunc(days);
       displayText = this._config.text.days;
       if (displayTime == 1 ) displayText = this._config.text.day;
       else displayText = this._config.text.days;
-    } else if (months < 1.5 || displayLimit == "weeks") {
+    } else if (months < 1 || displayLimit == "weeks") {
       displayTime = Math.trunc(weeks);
       if (displayTime == 1) displayText = this._config.text.week;
       else displayText = this._config.text.weeks;
-    } else if (years < 1.5 || displayLimit == "months") {
+    } else if (years < 1 || displayLimit == "months") {
       displayTime = Math.trunc(months);
       if (displayTime == 1) displayText = this._config.text.month;
       else displayText = this._config.text.months;
