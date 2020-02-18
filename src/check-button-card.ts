@@ -1,6 +1,7 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.0b2`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.0`, 'color: green; font-weight: bold;', '');
 
 export interface config {
+  due: boolean;
   text: any;
   button_style: any;
   card_style: any;
@@ -12,6 +13,7 @@ export interface config {
   title: string;
   topic: any;
   width: string;
+  severity: any;
 }
 
 class CheckButtonCard extends HTMLElement {
@@ -26,6 +28,7 @@ class CheckButtonCard extends HTMLElement {
   _clearUndo: any;
   _showInputTimeout: any;
   _overBy: boolean = false;
+  _severity: any[] = [];
 
   constructor() {
     super();
@@ -34,10 +37,28 @@ class CheckButtonCard extends HTMLElement {
 
   // Set config object.
   setConfig(config: config) {
+
+    // Deep copy function.
+    function deepcopy(value: any): any {
+      if (!(!!value && typeof value == 'object')) {
+        return value;
+      }
+      if (Object.prototype.toString.call(value) == '[object Date]') {
+        return new Date(value.getTime());
+      }
+      if (Array.isArray(value)) {
+        return value.map(deepcopy);
+      }
+      var result: any = {};
+      Object.keys(value).forEach(
+        function(key) { result[key] = deepcopy(value[key]); });
+      return result;
+    }
+
     const root = this.shadowRoot;
 
     // Avoid card config modifying lovelace config.
-    config = Object.assign({}, config);
+    config = deepcopy(config);
 
     // Default Config Settings
     if (root.lastChild) root.removeChild(root.lastChild);
@@ -60,29 +81,43 @@ class CheckButtonCard extends HTMLElement {
         hours: 'hours',
         minute: 'minute',
         minutes: 'minutes',
-        less_than_1: 'less than 1',
+        less_than: 'less than',
         ago: 'ago',
         due_in: 'due in',
         over_by: 'over by'
       },
-      display_limit: 'auto',
+      display_limit: null,
       due: false
     };
 
     // Merge text objects
-    config.text = Object.assign(defaultConfig.text, config.text)
+    config.text = Object.assign(defaultConfig.text, config.text);
 
     // Merge default and card config.
     config = Object.assign(defaultConfig, config);
 
+    // Append seconds to severity array.
+    let newArray = config.severity.slice();
+    for (var i = 0; i < newArray.length; i++) {
+      const value: number = this._convertToSeconds(newArray[i].value);
+      newArray[i].seconds = value;
+    }
+
+    // Sort array by seconds.
+    newArray.sort(function(a: any,b: any) {
+        return a.seconds - b.seconds;
+    });
+    if (config.due == false) {
+      newArray = newArray.reverse();
+    }
+    config.severity = newArray;
+
+    // Set bar width based on title position.
     if (config.title_position != 'inside') {
       if (!config.width) config.width = '70%';
     } else {
       if (!config.width) config.width = '100%';
     }
-
-    const sensorNameArray = config.entity.split('.');
-    config.topic = sensorNameArray[1];
 
     // Create card elements
     const card = document.createElement('ha-card');
@@ -165,13 +200,7 @@ class CheckButtonCard extends HTMLElement {
         --background-color: #000;
         right: 0;
         background-color: var(--background-color);
-      }
-      #button:hover {
         cursor: pointer;
-      }
-      #button:active {
-        --active-background-color: #000;
-        background-color: var(--active-background-color);
       }
       #buttonText {
         white-space: pre;
@@ -218,6 +247,7 @@ class CheckButtonCard extends HTMLElement {
         position: absolute;
         height: ${config.height};
         width: 100%;
+        cursor: pointer;
       }
       #inputBar, #configBar{
         position: absolute;
@@ -356,7 +386,9 @@ class CheckButtonCard extends HTMLElement {
     submitConfigButton.addEventListener('mouseup', event => {
       this._setConfig();
     });
-
+    titleBar.addEventListener('click', event => {
+      this._showAttributes('hass-more-info', { entityId: config.entity }, null);
+    });
     // Add to root
     root.appendChild(card);
 
@@ -392,7 +424,7 @@ class CheckButtonCard extends HTMLElement {
   }
 
   // Updates card content.
-  _updateCard(): void {
+  _updateCard() {
     const root = this.shadowRoot;
     const config = this._config;
     const hass = this._hass;
@@ -402,7 +434,10 @@ class CheckButtonCard extends HTMLElement {
     else entityState = hass.states[config.entity].state;
 
     const convertTime = this._convertToText(entityState);
-    let displayTime = convertTime.displayTime;
+    let displayTime: number | string | null = convertTime.displayTime;
+    if (displayTime == null) {
+      displayTime = config.text.less_than + ' 1';
+    }
     let displayText = convertTime.displayText;
     let color;
 
@@ -412,31 +447,33 @@ class CheckButtonCard extends HTMLElement {
     let textContent;
     if (config.due == true) {
       if (this._overBy == false) textContent = `${config.text.due_in} ${displayTime} ${displayText}`;
-      else textContent = `${config.text.over_by} ${displayTime} ${displayText}`
-    }
-    else textContent = `${displayTime} ${displayText} ${this._config.text.ago}`;
+      else textContent = `${config.text.over_by} ${displayTime} ${displayText}`;
+    } else textContent = `${displayTime} ${displayText} ${this._config.text.ago}`;
     if (config.title_position == 'inside') root.getElementById('buttonText').textContent = `${config.title} \r\n${textContent}`;
     else root.getElementById('buttonText').textContent = `${textContent}`;
 
     root.getElementById('button').style.setProperty('--background-color', color);
-    root.getElementById('button').style.setProperty('--hover-background-color', color);
-    root.getElementById('button').style.setProperty('--active-background-color', color);
   }
 
   // Returns color based on severity array
-  _computeSeverity(stateValue: any, sections: any[]) {
-    let numberValue = Number(stateValue);
-    if (this._overBy == true) numberValue = numberValue * -1;
-    console.log(numberValue)
+  _computeSeverity(stateValue: number, sections: any[]) {
+    const config = this._config;
+    if (this._overBy == true) stateValue = stateValue * -1;
     let color: null | string = null;
 
+    // For each object in array check if seconds is higher or lower than the current time.
     sections.forEach(section => {
-      const computedSeconds: number = this._convertToSeconds(section.value);
-      if (numberValue <= computedSeconds && color == null) {
-        color = section.color;
+      if (config.due == false ){
+        if (stateValue >= section.seconds && color == null) {
+          color = section.color;
+        }
+      } else {
+        if (stateValue <= section.seconds && color == null) {
+          color = section.color;
+        }
       }
     });
-    if (color == null ) color = sections[sections.length - 1].color;
+    if (color == null) color = config.color;
     return color;
   }
 
@@ -489,15 +526,15 @@ class CheckButtonCard extends HTMLElement {
 
     const elapsedTime = Date.now() / 1000 - Number(entityState);
 
-    let displayTime;
+    let displayTime: null | number = null;
     let displayText;
     let seconds;
-    if (config.due == true){
+    if (config.due == true) {
       seconds = remainingTime;
     } else {
       seconds = elapsedTime;
     }
-    let isSign = Math.sign(seconds)
+    let isSign = Math.sign(seconds);
     if (isSign == -1) {
       seconds = Math.abs(seconds);
       this._overBy = true;
@@ -513,32 +550,36 @@ class CheckButtonCard extends HTMLElement {
 
     const displayLimit = this._config.display_limit;
 
-    if (minutes < 1 || displayLimit == "minutes") {
-      displayTime = this._config.text.less_than_1;
+    if (minutes < 1 || displayLimit == 'minutes') {
       displayText = this._config.text.minute;
-    } else if (hours < 1 || displayLimit == "minutes") {
-      displayTime = Math.trunc(minutes);
+    } else if (hours < 1 || displayLimit == 'minutes') {
+      if (config.due == true) displayTime = Math.round(minutes);
+      else displayTime = Math.trunc(minutes);
       if (displayTime == 1) displayText = this._config.text.minute;
       else displayText = this._config.text.minutes;
-    } else if (days < 1 || displayLimit == "hours") {
-      displayTime = Math.trunc(hours);
+    } else if (days < 1 || displayLimit == 'hours') {
+      if (config.due == true) displayTime = Math.round(hours);
+      else displayTime = Math.trunc(hours);
       if (displayTime == 1) displayText = this._config.text.hour;
       else displayText = this._config.text.hours;
-    } else if (weeks < 1 || displayLimit == "days") {
-      displayTime = Math.trunc(days);
-      displayText = this._config.text.days;
-      if (displayTime == 1 ) displayText = this._config.text.day;
+    } else if (weeks < 1 || displayLimit == 'days') {
+      if (config.due == true) displayTime = Math.round(days);
+      else displayTime = Math.trunc(days);
+      if (displayTime == 1) displayText = this._config.text.day;
       else displayText = this._config.text.days;
-    } else if (months < 1 || displayLimit == "weeks") {
-      displayTime = Math.trunc(weeks);
+    } else if (months < 1 || displayLimit == 'weeks') {
+      if (config.due == true) displayTime = Math.round(weeks);
+      else displayTime = Math.trunc(weeks);
       if (displayTime == 1) displayText = this._config.text.week;
       else displayText = this._config.text.weeks;
-    } else if (years < 1 || displayLimit == "months") {
-      displayTime = Math.trunc(months);
+    } else if (years < 1 || displayLimit == 'months') {
+      if (config.due == true) displayTime = Math.round(months);
+      else displayTime = Math.trunc(months);
       if (displayTime == 1) displayText = this._config.text.month;
       else displayText = this._config.text.months;
-    } else if (years >= 1.5 || displayLimit == "years") {
-      displayTime = Math.trunc(years);
+    } else if (years >= 1.5 || displayLimit == 'years') {
+      if (config.due == true) displayTime = Math.round(years);
+      else displayTime = Math.trunc(years);
       if (displayTime == 1) displayText = this._config.text.year;
       else displayText = this._config.text.years;
     }
@@ -553,14 +594,14 @@ class CheckButtonCard extends HTMLElement {
   _buildPayload(timestamp: number) {
     const config = this._config;
     let payload: any = {};
-      payload.timestamp = timestamp;
-      payload.timeout = config.timeout;
-      if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + this._currentTimestamp;
-      payload.severity = config.severity;
-      payload.unit_of_measurement = 'timestamp';
-      if (config.automation) payload.automation = config.automation;
-      payload = JSON.stringify(payload)
-    return payload
+    payload.timestamp = timestamp;
+    payload.timeout = config.timeout;
+    if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + this._currentTimestamp;
+    payload.severity = config.severity;
+    payload.unit_of_measurement = 'timestamp';
+    if (config.automation) payload.automation = config.automation;
+    payload = JSON.stringify(payload);
+    return payload;
   }
 
   // Publishes a new timestamp if button is pressed.
@@ -571,7 +612,7 @@ class CheckButtonCard extends HTMLElement {
     this._undoEntityState = this._entityState;
     this._currentTimestamp = Math.trunc(Date.now() / 1000);
     this._clearUndo = this._showUndo();
-    let payload: any = this._buildPayload(this._currentTimestamp)
+    let payload: any = this._buildPayload(this._currentTimestamp);
     this._publish(payload);
   }
 
@@ -595,7 +636,7 @@ class CheckButtonCard extends HTMLElement {
     root.getElementById('undo').style.setProperty('visibility', 'hidden');
     root.getElementById('buttonBlocker').style.setProperty('visibility', 'hidden');
 
-    let payload: any = this._buildPayload(this._undoEntityState)
+    let payload: any = this._buildPayload(this._undoEntityState);
 
     this._publish(payload);
     clearTimeout(this._clearUndo);
@@ -615,7 +656,7 @@ class CheckButtonCard extends HTMLElement {
     root.getElementById('hoursInput').value = '';
     root.getElementById('daysInput').value = '';
 
-    let payload: any = this._buildPayload(timestamp)
+    let payload: any = this._buildPayload(timestamp);
     this._publish(payload);
     root.getElementById('undo').style.removeProperty('visibility');
     root.getElementById('buttonBlocker').style.removeProperty('visibility');
@@ -670,12 +711,27 @@ class CheckButtonCard extends HTMLElement {
     }
   }
 
+  // Press action
+  _showAttributes(type: string, detail: any, options: any) {
+    const root: any = this.shadowRoot;
+    options = options || {};
+    detail = detail === null || detail === undefined ? {} : detail;
+    const event: any = new Event(type, {
+      bubbles: options.bubbles === undefined ? true : options.bubbles,
+      cancelable: Boolean(options.cancelable),
+      composed: options.composed === undefined ? true : options.composed
+    });
+    event.detail = detail;
+    root.dispatchEvent(event);
+    return event;
+  }
+
   // MQTT service call.
   _publish(payload: string) {
     const config = this._config;
     const sensorNameArray = config.entity.split('.');
     const sensorName = sensorNameArray[1];
-    this._hass.callService('mqtt', 'publish', {topic: config.discovery_prefix + '/sensor/' + sensorName + '/state', payload: payload, retain: true});
+    this._hass.callService('mqtt', 'publish', { topic: config.discovery_prefix + '/sensor/' + sensorName + '/state', payload: payload, retain: true });
   }
 
   // Creates and publishes auto-discovery MQTT topic.
