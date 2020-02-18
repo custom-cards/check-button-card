@@ -38,6 +38,8 @@ class CheckButtonCard extends HTMLElement {
   // Set config object.
   setConfig(config: config) {
 
+    const root = this.shadowRoot;
+
     // Deep copy function.
     function deepcopy(value: any): any {
       if (!(!!value && typeof value == 'object')) {
@@ -54,8 +56,6 @@ class CheckButtonCard extends HTMLElement {
         function(key) { result[key] = deepcopy(value[key]); });
       return result;
     }
-
-    const root = this.shadowRoot;
 
     // Avoid card config modifying lovelace config.
     config = deepcopy(config);
@@ -96,21 +96,23 @@ class CheckButtonCard extends HTMLElement {
     // Merge default and card config.
     config = Object.assign(defaultConfig, config);
 
-    // Append seconds to severity array.
-    let newArray = config.severity.slice();
-    for (var i = 0; i < newArray.length; i++) {
-      const value: number = this._convertToSeconds(newArray[i].value);
-      newArray[i].seconds = value;
-    }
+    if (config.severity) {
+      // Append seconds to severity array.
+      let newArray = config.severity.slice();
+      for (var i = 0; i < newArray.length; i++) {
+        const value: number = this._convertToSeconds(newArray[i].value);
+        newArray[i].seconds = value;
+      }
 
-    // Sort array by seconds.
-    newArray.sort(function(a: any,b: any) {
-        return a.seconds - b.seconds;
-    });
-    if (config.due == false) {
-      newArray = newArray.reverse();
+      // Sort array by seconds.
+      newArray.sort(function(a: any,b: any) {
+          return a.seconds - b.seconds;
+      });
+      if (config.due == false) {
+        newArray = newArray.reverse();
+      }
+      config.severity = newArray;
     }
-    config.severity = newArray;
 
     // Set bar width based on title position.
     if (config.title_position != 'inside') {
