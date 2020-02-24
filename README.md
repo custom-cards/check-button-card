@@ -92,13 +92,15 @@ severity:
   - value: 1 day
     color: Blue
 ```
-Color can also be specified in hex format ```color: '#bfb540'```
+
+Color can also be specified in hex format ```color: '#bfb540'```.
 
 ## `due`
 Sets the card to display the due time based on timeout value set in the config.
 
-In this mode, the severity values work in reverse with 0 equalling timeout (and negative past this value)
-```
+In this mode, the severity values work in reverse with 0 equalling timeout (and negative past this value).
+
+```yaml
 due: true
 timeout: 5 days
 color: Green
