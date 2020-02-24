@@ -574,12 +574,12 @@ class CheckButtonCard extends HTMLElement {
       else displayTime = Math.trunc(weeks);
       if (displayTime == 1) displayText = this._config.text.week;
       else displayText = this._config.text.weeks;
-    } else if (years < 1.5 || displayLimit == 'months') {
+    } else if (years < 1 || displayLimit == 'months') {
       if (config.due == true) displayTime = Math.round(months);
       else displayTime = Math.trunc(months);
       if (displayTime == 1) displayText = this._config.text.month;
       else displayText = this._config.text.months;
-    } else if (years >= 1.5 || displayLimit == 'years') {
+    } else if (years >= 1 || displayLimit == 'years') {
       if (config.due == true) displayTime = Math.round(years);
       else displayTime = Math.trunc(years);
       if (displayTime == 1) displayText = this._config.text.year;
