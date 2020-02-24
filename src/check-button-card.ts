@@ -69,8 +69,8 @@ class CheckButtonCard extends HTMLElement {
       undo_timeout: 15,
       color: 'var(--checkbutton-card-color, var(--primary-color))',
       text: {
-        year: 'year +',
-        years: 'years +',
+        year: 'year',
+        years: 'years',
         month: 'month',
         months: 'months',
         week: 'week',
@@ -82,6 +82,7 @@ class CheckButtonCard extends HTMLElement {
         minute: 'minute',
         minutes: 'minutes',
         less_than: 'less than',
+        more_than: 'more than',
         ago: 'ago',
         due_in: 'due in',
         over_by: 'over by'
@@ -441,6 +442,10 @@ class CheckButtonCard extends HTMLElement {
       displayTime = config.text.less_than + ' 1';
     }
     let displayText = convertTime.displayText;
+    let moreThanText = "";
+    if (displayText == ("year" || "years")){
+      moreThanText = "more than "
+    }
     let color;
 
     if (config.severity) color = this._computeSeverity(convertTime.seconds, config.severity);
@@ -448,9 +453,11 @@ class CheckButtonCard extends HTMLElement {
 
     let textContent;
     if (config.due == true) {
-      if (this._overBy == false) textContent = `${config.text.due_in} ${displayTime} ${displayText}`;
-      else textContent = `${config.text.over_by} ${displayTime} ${displayText}`;
-    } else textContent = `${displayTime} ${displayText} ${this._config.text.ago}`;
+      if (this._overBy == false) textContent = `${config.text.due_in} ${moreThanText}${displayTime} ${displayText}`;
+      else textContent = `${config.text.over_by} ${moreThanText}${displayTime} ${displayText}`;
+    } else {
+      textContent = `${moreThanText}${displayTime} ${displayText} ${this._config.text.ago}`;
+    }
     if (config.title_position == 'inside') root.getElementById('buttonText').textContent = `${config.title} \r\n${textContent}`;
     else root.getElementById('buttonText').textContent = `${textContent}`;
 
@@ -550,40 +557,40 @@ class CheckButtonCard extends HTMLElement {
     let months = seconds / 2629746;
     let years = seconds / 31556952;
 
-    const displayLimit = this._config.display_limit;
+    const displayLimit = config.display_limit;
 
     if (minutes < 1 || displayLimit == 'minutes') {
-      displayText = this._config.text.minute;
+      displayText = config.text.minute;
     } else if (hours < 1 || displayLimit == 'minutes') {
       if (config.due == true) displayTime = Math.round(minutes);
       else displayTime = Math.trunc(minutes);
-      if (displayTime == 1) displayText = this._config.text.minute;
-      else displayText = this._config.text.minutes;
+      if (displayTime == 1) displayText = config.text.minute;
+      else displayText = config.text.minutes;
     } else if (days < 1 || displayLimit == 'hours') {
       if (config.due == true) displayTime = Math.round(hours);
       else displayTime = Math.trunc(hours);
-      if (displayTime == 1) displayText = this._config.text.hour;
-      else displayText = this._config.text.hours;
+      if (displayTime == 1) displayText = config.text.hour;
+      else displayText = config.text.hours;
     } else if (weeks < 1 || displayLimit == 'days') {
       if (config.due == true) displayTime = Math.round(days);
       else displayTime = Math.trunc(days);
-      if (displayTime == 1) displayText = this._config.text.day;
-      else displayText = this._config.text.days;
+      if (displayTime == 1) displayText = config.text.day;
+      else displayText = config.text.days;
     } else if (months < 1 || displayLimit == 'weeks') {
       if (config.due == true) displayTime = Math.round(weeks);
       else displayTime = Math.trunc(weeks);
-      if (displayTime == 1) displayText = this._config.text.week;
-      else displayText = this._config.text.weeks;
+      if (displayTime == 1) displayText = config.text.week;
+      else displayText = config.text.weeks;
     } else if (months < 19 || displayLimit == 'months') {
       if (config.due == true) displayTime = Math.round(months);
       else displayTime = Math.trunc(months);
-      if (displayTime == 1) displayText = this._config.text.month;
-      else displayText = this._config.text.months;
+      if (displayTime == 1) displayText = config.text.month;
+      else displayText = config.text.months;
     } else if (years >= 1.5 || displayLimit == 'years') {
       if (config.due == true) displayTime = Math.trunc(years);
       else displayTime = Math.trunc(years);
-      if (displayTime == 1) displayText = this._config.text.year;
-      else displayText = this._config.text.years;
+      if (displayTime == 1) displayText = config.text.year;
+      else displayText = config.text.years;
     }
 
     return {
