@@ -24,11 +24,11 @@ It is possible to publish to the MQTT topic using automations to update the butt
 The payload should be published to the relevant sensor. If you sensor is named `sensor.test_button` the topic should be `homeassistant/sensor/test_button/state`. For more information check out the Home Assistant [documentation](https://www.home-assistant.io/docs/mqtt/discovery/). 
 
 ### Payload Example
-``` json
+```json
 {"timestamp":"**timestamp here**","timeout":"2 hours","unit_of_measurement":"timestamp"}
 ```
 ### Node Red Example
-```
+```javascript
 // Define entity_id
 const entityId = "sensor.test_button";
 
