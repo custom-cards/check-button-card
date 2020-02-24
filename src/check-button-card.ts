@@ -1,4 +1,4 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.1`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.2`, 'color: green; font-weight: bold;', '');
 
 export interface config {
   due: boolean;
@@ -69,8 +69,8 @@ class CheckButtonCard extends HTMLElement {
       undo_timeout: 15,
       color: 'var(--checkbutton-card-color, var(--primary-color))',
       text: {
-        year: 'year',
-        years: 'years',
+        year: 'year +',
+        years: 'years +',
         month: 'month',
         months: 'months',
         week: 'week',
@@ -490,11 +490,11 @@ class CheckButtonCard extends HTMLElement {
       switch (timeArray[1]) {
         case 'year':
         case 'years':
-          output = timeArray[0] * 29030400;
+          output = timeArray[0] * 31556952;
           break;
         case 'month':
         case 'months':
-          output = timeArray[0] * 2419200;
+          output = timeArray[0] * 2629746;
           break;
         case 'week':
         case 'weeks':
@@ -547,8 +547,8 @@ class CheckButtonCard extends HTMLElement {
     let hours = minutes / 60;
     let days = hours / 24;
     let weeks = seconds / 604800;
-    let months = seconds / 2678400;
-    let years = seconds / 31536000;
+    let months = seconds / 2629746;
+    let years = seconds / 31556952;
 
     const displayLimit = this._config.display_limit;
 
@@ -574,13 +574,13 @@ class CheckButtonCard extends HTMLElement {
       else displayTime = Math.trunc(weeks);
       if (displayTime == 1) displayText = this._config.text.week;
       else displayText = this._config.text.weeks;
-    } else if (years < 1 || displayLimit == 'months') {
+    } else if (months < 19 || displayLimit == 'months') {
       if (config.due == true) displayTime = Math.round(months);
       else displayTime = Math.trunc(months);
       if (displayTime == 1) displayText = this._config.text.month;
       else displayText = this._config.text.months;
     } else if (years >= 1.5 || displayLimit == 'years') {
-      if (config.due == true) displayTime = Math.round(years);
+      if (config.due == true) displayTime = Math.trunc(years);
       else displayTime = Math.trunc(years);
       if (displayTime == 1) displayText = this._config.text.year;
       else displayText = this._config.text.years;
