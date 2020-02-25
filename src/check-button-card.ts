@@ -658,7 +658,7 @@ class CheckButtonCard extends HTMLElement {
     const minutes = root.getElementById('minutesInput').value;
     const hours = root.getElementById('hoursInput').value;
     const days = root.getElementById('daysInput').value;
-    const totalTime = minutes * 60 + hours * 3600 + days * 86400;
+    const totalTime = (minutes * 60) + (hours * 3600) + (days * 86400);
     const timestamp = Math.trunc(Date.now() / 1000) - totalTime;
     root.getElementById('inputBar').style.setProperty('visibility', 'hidden');
     root.getElementById('minutesInput').value = '';
