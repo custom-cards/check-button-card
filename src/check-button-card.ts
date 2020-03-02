@@ -88,7 +88,8 @@ class CheckButtonCard extends HTMLElement {
         over_by: 'over by'
       },
       display_limit: null,
-      due: false
+      due: false,
+      unit: true
     };
 
     // Merge text objects
@@ -407,7 +408,7 @@ class CheckButtonCard extends HTMLElement {
       this._showConfigBar();
     }
     if (hass.states[config.entity] != undefined) {
-      if (hass.states[config.entity].attributes.unit_of_measurement != 'timestamp' && this._configSet != true) {
+      if (((hass.states[config.entity].attributes.unit_of_measurement != 'timestamp' && config.unit) || (hass.states[config.entity].attributes.type != 'check-button-sensor' && (!config.unit))) && this._configSet != true) {
         this._showConfigBar();
       }
       entityState = hass.states[config.entity].state;
@@ -607,7 +608,7 @@ class CheckButtonCard extends HTMLElement {
     payload.timeout = config.timeout;
     if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + this._currentTimestamp;
     payload.severity = config.severity;
-    payload.unit_of_measurement = 'timestamp';
+    if (config.unit ? payload.unit_of_measurement = 'timestamp' : payload.type = 'check-button-sensor')
     if (config.automation) payload.automation = config.automation;
     payload = JSON.stringify(payload);
     return payload;
@@ -695,7 +696,7 @@ class CheckButtonCard extends HTMLElement {
       root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
     }
     if (this._hass.states[config.entity] != undefined) {
-      if (this._hass.states[config.entity].attributes.unit_of_measurement != 'timestamp') {
+      if ((this._hass.states[config.entity].attributes.unit_of_measurement != 'timestamp' && config.unit) || (this._hass.states[config.entity].attributes.type != 'check-button-sensor' && (!config.unit))) {
         root.getElementById('submitConfigButton').style.setProperty('visibility', 'hidden');
         root.getElementById('configInput').textContent = 'Already exists. Incorrect entity type.';
         root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
@@ -748,6 +749,7 @@ class CheckButtonCard extends HTMLElement {
     const root = this.shadowRoot;
     const config = this._config;
     const sensorNameArray = config.entity.split('.');
+    const sensorIcon = config.icon || 'mdi:checkbox-marked';
     const sensorName = sensorNameArray[1];
     root.getElementById('configBar').style.setProperty('visibility', 'hidden');
     const discoveryConfig =
@@ -763,7 +765,8 @@ class CheckButtonCard extends HTMLElement {
       sensorName +
       '","unique_id": "' +
       sensorName +
-      '_homeassistant"}';
+      '_homeassistant","icon":"' +
+      sensorIcon + '"}';
     if (config.remove == true) {
       this._hass.callService('mqtt', 'publish', {
         topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
