@@ -1,4 +1,4 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.2`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.3`, 'color: green; font-weight: bold;', '');
 
 export interface config {
   due: boolean;
