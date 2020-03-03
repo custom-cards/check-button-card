@@ -107,7 +107,7 @@ due: true
 timeout: 5 days
 color: Green
 severity:
-  - value: '-1' day
+  - value: '-1 day'
     color: Red
   - value: 0 days
     color: Yellow
