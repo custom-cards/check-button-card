@@ -89,7 +89,6 @@ class CheckButtonCard extends HTMLElement {
       },
       display_limit: null,
       due: false,
-      unit: true
     };
 
     // Merge text objects
@@ -408,7 +407,9 @@ class CheckButtonCard extends HTMLElement {
       this._showConfigBar();
     }
     if (hass.states[config.entity] != undefined) {
-      if (((hass.states[config.entity].attributes.unit_of_measurement != 'timestamp' && config.unit) || (hass.states[config.entity].attributes.device_class != 'timestamp' && (!config.unit))) && this._configSet != true) {
+      // Check if sensor has correct device_class attribute
+      const device_class = hass.states[config.entity].attributes.device_class != undefined ? hass.states[config.entity].attributes.device_class == 'timestamp' ? true : false : false;
+      if (!device_class) {
         this._showConfigBar();
       }
       entityState = hass.states[config.entity].state;
@@ -609,7 +610,7 @@ class CheckButtonCard extends HTMLElement {
     if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + this._currentTimestamp;
     if (config.timeout) payload.timeout_seconds = this._convertToSeconds(config.timeout)
     payload.severity = config.severity;
-    if (config.unit ? payload.unit_of_measurement = 'timestamp' : null)
+    if (config.unit) payload.unit_of_measurement = 'timestamp';
     if (config.automation) payload.automation = config.automation;
     payload = JSON.stringify(payload);
     return payload;
@@ -697,7 +698,14 @@ class CheckButtonCard extends HTMLElement {
       root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
     }
     if (this._hass.states[config.entity] != undefined) {
-      if ((this._hass.states[config.entity].attributes.unit_of_measurement != 'timestamp' && config.unit) || (this._hass.states[config.entity].attributes.device_class != 'timestamp' && (!config.unit))) {
+      // Existing entity, validate using new and legacy timestamp attributes
+      const device_class = this._hass.states[config.entity].attributes.device_class != undefined ? this._hass.states[config.entity].attributes.device_class == 'timestamp' ? true : false : false;
+      const unit_of_measurement = this._hass.states[config.entity].attributes.unit_of_measurement != undefined ? this._hass.states[config.entity].attributes.unit_of_measurement == 'timestamp' ? true : false : false;  
+      if (!device_class && unit_of_measurement) {
+        // Allows update to use device_class for existing sensors
+        root.getElementById('configInput').textContent = 'Update Sensor Class?';
+     } else {
+        // Not a valid check-button-card sensor
         root.getElementById('submitConfigButton').style.setProperty('visibility', 'hidden');
         root.getElementById('configInput').textContent = 'Already exists. Incorrect entity type.';
         root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
