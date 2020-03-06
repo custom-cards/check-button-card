@@ -44,6 +44,12 @@ const currentTime = Math.trunc(Date.now()/1000);
 // Modify timestamp in payloadObject.
 payloadObject.timestamp = currentTime;
 
+// Modify timeout_timestamp in payloadObject if defined
+if (payloadObject.timeout_seconds !== undefined) {
+    const timeoutTime = currentTime + payloadObject.timeout_seconds
+    payloadObject.timeout_timestamp = timeoutTime;
+}
+
 // Create string from object
 msg.payload = JSON.stringify(payloadObject);
 
@@ -66,7 +72,7 @@ return msg;
 | timeout | string | none | Attribute **required** for `due` config option. `minutes`, `days`, `weeks`, `months`, `years`.
 | text | object | none | A list defining the text displayed. `minute(s)`, `day(s)`, `week(s)`, `month(s)`, `year(s)`, `ago`, `less_than`, `more_than`, `due_by`, `over_by`.
 | due | boolean | false | Sets the card to display the due time based on `timeout` value set in the config.
-| unit | boolean | true | Allows you to disable the unit of measurment for clearing history statistics on the more-info graph.
+| unit | boolean | false | Allows you to enable the timestamp `unit of measurment` attribute.
 | icon | string | mdi:checkbox-marked | Allows you to define a custom icon for this sensor.
 | undo_timeout | number | 15 | Time until undo button times out in seconds.
 | remove | boolean | false | Set to `true` for removal config mode. Used to remove entity from MQTT discovery.
