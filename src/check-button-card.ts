@@ -88,7 +88,7 @@ class CheckButtonCard extends HTMLElement {
         over_by: 'over by'
       },
       display_limit: null,
-      due: false,
+      due: false
     };
 
     // Merge text objects
