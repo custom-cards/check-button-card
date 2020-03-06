@@ -607,7 +607,7 @@ class CheckButtonCard extends HTMLElement {
     let payload: any = {};
     payload.timestamp = timestamp;
     payload.timeout = config.timeout;
-    if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + timestamp;
+    if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + Number(timestamp);
     if (config.timeout) payload.timeout_seconds = this._convertToSeconds(config.timeout)
     payload.severity = config.severity;
     if (config.unit) payload.unit_of_measurement = 'timestamp';
