@@ -1,4 +1,4 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.3`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.1.0`, 'color: green; font-weight: bold;', '');
 
 export interface config {
   due: boolean;
@@ -607,10 +607,12 @@ class CheckButtonCard extends HTMLElement {
     let payload: any = {};
     payload.timestamp = timestamp;
     payload.timeout = config.timeout;
-    if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + Number(timestamp);
-    if (config.timeout) payload.timeout_seconds = this._convertToSeconds(config.timeout)
+    if (config.timeout) {
+      payload.timeout_timestamp = this._convertToSeconds(config.timeout) + Number(timestamp);
+      payload.timeout_seconds = this._convertToSeconds(config.timeout);
+    }
     payload.severity = config.severity;
-    if (config.unit) payload.unit_of_measurement = 'timestamp';
+    if (config.unit_of_measurement) payload.unit_of_measurement = config.unit_of_measurement;
     if (config.automation) payload.automation = config.automation;
     payload = JSON.stringify(payload);
     return payload;
@@ -656,7 +658,6 @@ class CheckButtonCard extends HTMLElement {
 
   // Publishes timestamp based on user input.
   _setInput() {
-    const config = this._config;
     const root = this.shadowRoot;
     const minutes = root.getElementById('minutesInput').value;
     const hours = root.getElementById('hoursInput').value;
@@ -700,11 +701,10 @@ class CheckButtonCard extends HTMLElement {
     if (this._hass.states[config.entity] != undefined) {
       // Existing entity, validate using new and legacy timestamp attributes
       const device_class = this._hass.states[config.entity].attributes.device_class != undefined ? this._hass.states[config.entity].attributes.device_class == 'timestamp' ? true : false : false;
-      const unit_of_measurement = this._hass.states[config.entity].attributes.unit_of_measurement != undefined ? this._hass.states[config.entity].attributes.unit_of_measurement == 'timestamp' ? true : false : false;  
-      if (!device_class && unit_of_measurement) {
+      if (!device_class) {
         // Allows update to use device_class for existing sensors
-        root.getElementById('configInput').textContent = 'Update Sensor Class?';
-     } else {
+        root.getElementById('configInput').textContent = 'Update Sensor Config?';
+    } else {
         // Not a valid check-button-card sensor
         root.getElementById('submitConfigButton').style.setProperty('visibility', 'hidden');
         root.getElementById('configInput').textContent = 'Already exists. Incorrect entity type.';
@@ -795,6 +795,7 @@ class CheckButtonCard extends HTMLElement {
       });
       this._configSet = true;
       this._action();
+      this._undo();
     }
   }
 

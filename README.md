@@ -72,8 +72,8 @@ return msg;
 | timeout | string | none | Attribute **required** for `due` config option. `minutes`, `days`, `weeks`, `months`, `years`.
 | text | object | none | A list defining the text displayed. `minute(s)`, `day(s)`, `week(s)`, `month(s)`, `year(s)`, `ago`, `less_than`, `more_than`, `due_by`, `over_by`.
 | due | boolean | false | Sets the card to display the due time based on `timeout` value set in the config.
-| unit | boolean | false | Allows you to enable the timestamp `unit of measurment` attribute.
-| icon | string | mdi:checkbox-marked | Allows you to define a custom icon for this sensor.
+| unit_of_measurement | string | none | Define the unit of measurement of the sensor.
+| icon | string | mdi:checkbox-marked | Define a custom icon for this sensor.
 | undo_timeout | number | 15 | Time until undo button times out in seconds.
 | remove | boolean | false | Set to `true` for removal config mode. Used to remove entity from MQTT discovery.
 | discovery_prefix | string | homeassistant | Define custom MQTT discovery prefix.
