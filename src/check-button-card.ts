@@ -1,4 +1,4 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.2`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.0.3`, 'color: green; font-weight: bold;', '');
 
 export interface config {
   due: boolean;
@@ -407,7 +407,9 @@ class CheckButtonCard extends HTMLElement {
       this._showConfigBar();
     }
     if (hass.states[config.entity] != undefined) {
-      if (hass.states[config.entity].attributes.unit_of_measurement != 'timestamp' && this._configSet != true) {
+      // Check if sensor has correct device_class attribute
+      const device_class = hass.states[config.entity].attributes.device_class != undefined ? hass.states[config.entity].attributes.device_class == 'timestamp' ? true : false : false;
+      if (!device_class) {
         this._showConfigBar();
       }
       entityState = hass.states[config.entity].state;
@@ -605,9 +607,10 @@ class CheckButtonCard extends HTMLElement {
     let payload: any = {};
     payload.timestamp = timestamp;
     payload.timeout = config.timeout;
-    if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + this._currentTimestamp;
+    if (config.timeout) payload.timeout_timestamp = this._convertToSeconds(config.timeout) + Number(timestamp);
+    if (config.timeout) payload.timeout_seconds = this._convertToSeconds(config.timeout)
     payload.severity = config.severity;
-    payload.unit_of_measurement = 'timestamp';
+    if (config.unit) payload.unit_of_measurement = 'timestamp';
     if (config.automation) payload.automation = config.automation;
     payload = JSON.stringify(payload);
     return payload;
@@ -658,7 +661,7 @@ class CheckButtonCard extends HTMLElement {
     const minutes = root.getElementById('minutesInput').value;
     const hours = root.getElementById('hoursInput').value;
     const days = root.getElementById('daysInput').value;
-    const totalTime = minutes * 60 + hours * 3600 + days * 86400;
+    const totalTime = (minutes * 60) + (hours * 3600) + (days * 86400);
     const timestamp = Math.trunc(Date.now() / 1000) - totalTime;
     root.getElementById('inputBar').style.setProperty('visibility', 'hidden');
     root.getElementById('minutesInput').value = '';
@@ -695,7 +698,14 @@ class CheckButtonCard extends HTMLElement {
       root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
     }
     if (this._hass.states[config.entity] != undefined) {
-      if (this._hass.states[config.entity].attributes.unit_of_measurement != 'timestamp') {
+      // Existing entity, validate using new and legacy timestamp attributes
+      const device_class = this._hass.states[config.entity].attributes.device_class != undefined ? this._hass.states[config.entity].attributes.device_class == 'timestamp' ? true : false : false;
+      const unit_of_measurement = this._hass.states[config.entity].attributes.unit_of_measurement != undefined ? this._hass.states[config.entity].attributes.unit_of_measurement == 'timestamp' ? true : false : false;  
+      if (!device_class && unit_of_measurement) {
+        // Allows update to use device_class for existing sensors
+        root.getElementById('configInput').textContent = 'Update Sensor Class?';
+     } else {
+        // Not a valid check-button-card sensor
         root.getElementById('submitConfigButton').style.setProperty('visibility', 'hidden');
         root.getElementById('configInput').textContent = 'Already exists. Incorrect entity type.';
         root.getElementById('configBar').style.setProperty('--background-color', '#FF0000');
@@ -748,6 +758,7 @@ class CheckButtonCard extends HTMLElement {
     const root = this.shadowRoot;
     const config = this._config;
     const sensorNameArray = config.entity.split('.');
+    const sensorIcon = config.icon || 'mdi:checkbox-marked';
     const sensorName = sensorNameArray[1];
     root.getElementById('configBar').style.setProperty('visibility', 'hidden');
     const discoveryConfig =
@@ -763,7 +774,8 @@ class CheckButtonCard extends HTMLElement {
       sensorName +
       '","unique_id": "' +
       sensorName +
-      '_homeassistant"}';
+      '_homeassistant","icon":"' +
+      sensorIcon + '","device_class":"timestamp"}';
     if (config.remove == true) {
       this._hass.callService('mqtt', 'publish', {
         topic: config.discovery_prefix + '/sensor/' + sensorName + '/state',
