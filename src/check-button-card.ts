@@ -701,7 +701,8 @@ class CheckButtonCard extends HTMLElement {
     if (this._hass.states[config.entity] != undefined) {
       // Existing entity, validate using new and legacy timestamp attributes
       const device_class = this._hass.states[config.entity].attributes.device_class != undefined ? this._hass.states[config.entity].attributes.device_class == 'timestamp' ? true : false : false;
-      if (!device_class) {
+      const unit_of_measurement = this._hass.states[config.entity].attributes.unit_of_measurement != undefined ? this._hass.states[config.entity].attributes.unit_of_measurement == 'timestamp' ? true : false : false;  
+      if (!device_class && unit_of_measurement) {
         // Allows update to use device_class for existing sensors
         root.getElementById('configInput').textContent = 'Update Sensor Config?';
     } else {
