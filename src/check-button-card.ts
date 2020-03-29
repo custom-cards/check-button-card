@@ -1,4 +1,4 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.1.0`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.1.1`, 'color: green; font-weight: bold;', '');
 
 export interface config {
   due: boolean;
@@ -184,7 +184,6 @@ class CheckButtonCard extends HTMLElement {
     style.textContent = `
       ha-card {
         background-color: var(--paper-card-background-color);
-        padding: 4px;
       }
       #background {
         position: relative;
@@ -198,7 +197,7 @@ class CheckButtonCard extends HTMLElement {
         font-weight: bold;
         font-size: 13px;
         text-shadow: 1px 1px #0007;
-        border-radius: 3px;
+        border-radius: var(--ha-card-border-radius);
         width: ${config.width};
         --background-color: #000;
         right: 0;
@@ -226,7 +225,7 @@ class CheckButtonCard extends HTMLElement {
         width: 80px;
         background-color: hsl(220, 40%, 50%);
         right: 0px;
-        border-radius: 3px;
+        border-radius: var(--ha-card-border-radius);
         text-shadow: 1px 1px #0007;
         color: #FFF;
         font-size: 12px;
@@ -259,7 +258,7 @@ class CheckButtonCard extends HTMLElement {
         vertical-align: middle;
         height: ${config.height};
         line-height: ${config.height};
-        border-radius: 3px;
+        border-radius: var(--ha-card-border-radius);
         width: ${config.width};
         right: 0;
         --background-color: hsl(220, 50%, 50%);
@@ -724,7 +723,7 @@ class CheckButtonCard extends HTMLElement {
     }
 
     if (state == 'down') {
-      this._showInputTimeout = setTimeout(showConfig, 1000);
+      this._showInputTimeout = setTimeout(showConfig, 500);
     } else if (state == 'up') {
       root.getElementById('buttonBlocker').style.setProperty('visibility', 'hidden');
       clearTimeout(this._showInputTimeout);
