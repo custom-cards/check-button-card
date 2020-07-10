@@ -88,7 +88,8 @@ class CheckButtonCard extends HTMLElement {
         over_by: 'over by'
       },
       display_limit: null,
-      due: false
+      due: false,
+      locale: 'en-us'
     };
 
     // Merge text objects
@@ -605,6 +606,7 @@ class CheckButtonCard extends HTMLElement {
     const config = this._config;
     let payload: any = {};
     payload.timestamp = timestamp;
+    payload.timestamp_friendly = new Date(timestamp*1000).toLocaleString(config.locale);
     payload.timeout = config.timeout;
     if (config.timeout) {
       payload.timeout_timestamp = this._convertToSeconds(config.timeout) + Number(timestamp);
