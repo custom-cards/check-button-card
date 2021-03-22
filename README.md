@@ -1,3 +1,5 @@
+![](https://img.shields.io/maintenance/no/2020)
+
 # check-button-card
 ![](images/example.gif)
 
