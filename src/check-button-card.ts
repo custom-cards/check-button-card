@@ -1,4 +1,4 @@
-console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.2.0`, 'color: green; font-weight: bold;', '');
+console.info(`%cCHECK-BUTTON-CARD\n%cVersion: 1.3.0`, 'color: green; font-weight: bold;', '');
 
 export interface config {
   due: boolean;
@@ -23,7 +23,7 @@ class CheckButtonCard extends HTMLElement {
   _counter: number = 0;
   _entityState: number = 0;
   _configSet: boolean = false;
-  _undoEntityState: number = 0;
+  _undoTimestamp: number = 0;
   _currentTimestamp: number = 0;
   _clearUndo: any;
   _showInputTimeout: any;
@@ -527,15 +527,24 @@ class CheckButtonCard extends HTMLElement {
     return output;
   }
 
-  // Converts seconds into text string.
-  _convertToText(entityState: number) {
+  // Converts timestamp into text string.
+  _convertToText(entityState: number | string) {
+    // Try to convert from old timestamp format if present
+    if (entityState === "unknown") {
+      const timestampAttribute = this._hass.states[this._config.entity].attributes.timestamp;
+
+      if(!isNaN(timestampAttribute)) {
+          entityState = new Date(timestampAttribute * 1000).toISOString();
+      }
+    }
+    const timestamp = Date.parse(entityState.toString()) / 1000;
     const config = this._config;
 
     const timeout = this._convertToSeconds(config.timeout);
-    const dueTime = Number(entityState) + timeout;
+    const dueTime = Number(timestamp) + timeout;
     const remainingTime = dueTime - Math.trunc(Date.now() / 1000);
 
-    const elapsedTime = Date.now() / 1000 - Number(entityState);
+    const elapsedTime = Date.now() / 1000 - Number(timestamp);
 
     let displayTime: null | number = null;
     let displayText;
@@ -604,8 +613,10 @@ class CheckButtonCard extends HTMLElement {
 
   _buildPayload(timestamp: number) {
     const config = this._config;
+    const timestampDate = new Date(timestamp * 1000);
     let payload: any = {};
-    payload.timestamp = timestamp;
+    payload.timestamp = timestampDate.toISOString();
+    payload.timestamp_unix = timestamp;
     payload.timestamp_friendly = new Date(timestamp*1000).toLocaleString(config.locale);
     payload.timeout = config.timeout;
     if (config.timeout) {
@@ -624,7 +635,7 @@ class CheckButtonCard extends HTMLElement {
     const root = this.shadowRoot;
     root.getElementById('undo').style.removeProperty('visibility');
     root.getElementById('buttonBlocker').style.removeProperty('visibility');
-    this._undoEntityState = this._entityState;
+    this._undoTimestamp = Date.parse(this._entityState.toString()) / 1000;
     this._currentTimestamp = Math.trunc(Date.now() / 1000);
     this._clearUndo = this._showUndo();
     let payload: any = this._buildPayload(this._currentTimestamp);
@@ -651,7 +662,7 @@ class CheckButtonCard extends HTMLElement {
     root.getElementById('undo').style.setProperty('visibility', 'hidden');
     root.getElementById('buttonBlocker').style.setProperty('visibility', 'hidden');
 
-    let payload: any = this._buildPayload(this._undoEntityState);
+    let payload: any = this._buildPayload(this._undoTimestamp);
 
     this._publish(payload);
     clearTimeout(this._clearUndo);
@@ -675,7 +686,7 @@ class CheckButtonCard extends HTMLElement {
     root.getElementById('undo').style.removeProperty('visibility');
     root.getElementById('buttonBlocker').style.removeProperty('visibility');
     this._currentTimestamp = timestamp;
-    this._undoEntityState = this._entityState;
+    this._undoTimestamp = Date.parse(this._entityState.toString()) / 1000;
     this._clearUndo = this._showUndo();
   }
 
